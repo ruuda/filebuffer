@@ -28,6 +28,7 @@ use std::io;
 use std::fs;
 use std::os::unix::io::AsRawFd;
 use std::path::Path;
+use std::ptr;
 use std::slice;
 use std::thread;
 
@@ -48,13 +49,13 @@ fn map_file(file: &fs::File) -> io::Result<(*const u8, usize)> {
         return Err(io::Error::new(io::ErrorKind::Other, "file is larger than address space"));
     }
 
+    // Don't try to map anything if the file is empty.
     if length == 0 {
-        return Err(io::Error::new(io::ErrorKind::Other, "file has size zero"));
+        return Ok((ptr::null(), 0));
     }
 
-    let null = 0 as *mut libc::c_void;
     let result = unsafe {
-        libc::mmap(null, length as usize, libc::PROT_READ, libc::MAP_PRIVATE, fd, 0)
+        libc::mmap(ptr::null_mut(), length as usize, libc::PROT_READ, libc::MAP_PRIVATE, fd, 0)
     };
 
     if result == libc::MAP_FAILED {
@@ -174,6 +175,9 @@ impl StreamBuffer {
         // The specified offset and length must lie within the buffer.
         assert!(offset + length <= self.length);
 
+        // This is a no-op for empty files.
+        if self.buffer == ptr::null() { return 0; }
+
         let aligned_offset = round_down_to(offset, self.page_size);
         let aligned_length = round_up_to(length + (offset - aligned_offset), self.page_size);
         let num_pages = aligned_length / self.page_size;
@@ -244,6 +248,9 @@ impl StreamBuffer {
     ///
     /// Panics if the specified range lies outside of the buffer.
     pub fn try_slice(&self, offset: usize, length: usize) -> Option<&[u8]> {
+        // TODO: Due to Rust internals, returning `Some` when `self.buffer` is null, is not
+        // possible. But should this method return an option anyway?
+
         // The bounds check assertion is done in `resident_len()`, no need to duplicate it here.
         if self.resident_len(offset, length) < length {
             self.prefetch(offset, length);
@@ -269,6 +276,9 @@ impl StreamBuffer {
         // The specified offset and length must lie within the buffer.
         assert!(offset + length <= self.length);
 
+        // This is a no-op for empty files.
+        if self.buffer == ptr::null() { return; }
+
         let aligned_offset = round_down_to(offset, self.page_size);
         let aligned_length = round_up_to(length + (offset - aligned_offset), self.page_size);
 
@@ -279,7 +289,7 @@ impl StreamBuffer {
 
 impl Drop for StreamBuffer {
     fn drop(&mut self) {
-        unmap_file(self.buffer, self.length);
+        if self.buffer != ptr::null() { unmap_file(self.buffer, self.length); }
     }
 }
 
@@ -313,4 +323,27 @@ fn prefetch_is_not_harmful() {
 
     // Reading from the file should still work as normal.
     assert_eq!(fstream.as_slice()[3..15], b"Streambuffer"[..]);
+}
+
+#[test]
+fn open_empty_file_is_fine() {
+    StreamBuffer::open("src/empty_file_for_testing.rs").unwrap();
+}
+
+#[test]
+fn empty_file_prefetch_is_fine() {
+    let fstream = StreamBuffer::open("src/empty_file_for_testing.rs").unwrap();
+    fstream.prefetch(0, 0);
+}
+
+#[test]
+fn empty_file_as_slice_is_fine() {
+    let fstream = StreamBuffer::open("src/empty_file_for_testing.rs").unwrap();
+    assert_eq!(fstream.as_slice().iter().any(|_| true), false);
+}
+
+#[test]
+fn empty_file_has_zero_resident_len() {
+    let fstream = StreamBuffer::open("src/empty_file_for_testing.rs").unwrap();
+    assert_eq!(fstream.resident_len(0, 0), 0);
 }
