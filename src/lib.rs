@@ -95,7 +95,7 @@ fn get_resident(buffer: *const u8, length: usize, residency: &mut [bool]) {
 /// must be page-aligned.
 fn prefetch(buffer: *const u8, length: usize) {
     let result = unsafe {
-        libc::posix_madvise(buffer as *mut libc::c_void, length, libc::POSIX_MADV_WILLNEED)
+        libc::madvise(buffer as *mut libc::c_void, length, libc::MADV_WILLNEED)
     };
 
     // Any returned error code indicates a programming error, not a runtime error.
