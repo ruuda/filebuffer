@@ -1,3 +1,10 @@
+// Streambuffer -- Fast asynchronous file reading
+// Copyright 2016 Ruud van Asseldonk
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// A copy of the License has been included in the root of the repository.
+
 use std::io;
 use std::fs;
 use std::os::unix::io::AsRawFd;
@@ -5,7 +12,7 @@ use std::path::Path;
 
 extern crate libc;
 
-pub struct FileStream {
+pub struct StreamBuffer {
   buffer: *const u8,
   length: usize,
 }
@@ -43,14 +50,14 @@ fn unmap_file(buffer: *const u8, length: usize) {
     assert!(result == 0);
 }
 
-impl FileStream {
-    pub fn open<P: AsRef<Path>>(path: P) -> io::Result<FileStream> {
+impl StreamBuffer {
+    pub fn open<P: AsRef<Path>>(path: P) -> io::Result<StreamBuffer> {
         // Open the `fs::File` so we get all of std's error handling for free, then use it to
         // extract the file descriptor. The file is closed again when it goes out of scope, but
         // `mmap` only requires the descriptor to be open for the `mmap` call, so this is fine.
         let file = try!(fs::File::open(path));
         let (buffer, length) = try!(map_file(&file));
-        let fstream = FileStream {
+        let fstream = StreamBuffer {
             buffer: buffer,
             length: length,
         };
@@ -58,14 +65,14 @@ impl FileStream {
     }
 }
 
-impl Drop for FileStream {
+impl Drop for StreamBuffer {
     fn drop(&mut self) {
         unmap_file(self.buffer, self.length);
     }
 }
 
 #[test]
-fn open_file_stream() {
-    let fstream = FileStream::open("src/lib.rs");
+fn open_file() {
+    let fstream = StreamBuffer::open("src/lib.rs");
     assert!(fstream.is_ok());
 }
