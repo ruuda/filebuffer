@@ -6,3 +6,4 @@ authors = ["Ruud van Asseldonk <dev@veniogames.com>"]
 license = "Apache-2.0"
 
 [dependencies]
+libc = "0.2.6"
