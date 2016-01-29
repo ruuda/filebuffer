@@ -35,9 +35,9 @@ extern crate libc;
 
 /// A memory-mapped file.
 pub struct StreamBuffer {
-  page_size: usize,
-  buffer: *const u8,
-  length: usize,
+    page_size: usize,
+    buffer: *const u8,
+    length: usize,
 }
 
 fn map_file(file: &fs::File) -> io::Result<(*const u8, usize)> {
@@ -65,9 +65,7 @@ fn map_file(file: &fs::File) -> io::Result<(*const u8, usize)> {
 }
 
 fn unmap_file(buffer: *const u8, length: usize) {
-    let result = unsafe {
-        libc::munmap(buffer as *mut libc::c_void, length)
-    };
+    let result = unsafe { libc::munmap(buffer as *mut libc::c_void, length) };
 
     // `munmap` only fails due to incorrect usage, which is a program error, not a runtime failure.
     assert!(result == 0);
@@ -162,7 +160,7 @@ impl StreamBuffer {
     /// read from disk. To avoid blocking, call `prefetch()` and check whether the memory is
     /// resident with `resident_len()`.
     pub fn as_slice(&self) -> &[u8] {
-       unsafe { slice::from_raw_parts(self.buffer, self.length) }
+        unsafe { slice::from_raw_parts(self.buffer, self.length) }
     }
 
     /// Returns the length of the mapped file in bytes.
