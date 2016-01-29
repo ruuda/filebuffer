@@ -216,6 +216,13 @@ impl StreamBuffer {
         cmp::min(length, resident_length)
     }
 
+    /// Returns a good chunk length if the file is to be processed in chunks.
+    ///
+    /// This just returns the page size. Multiples of this are fine too.
+    pub fn chunk_len_hint(&self) -> usize {
+        self.page_size
+    }
+
     /// Returns the file contents as a slice.
     ///
     /// Accessing elements of the slice might cause a page fault, blocking until the data has been
