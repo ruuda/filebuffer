@@ -9,7 +9,17 @@
 //!
 //! # Examples
 //!
-//! TODO: Add example.
+//! Map a file into memory and access it as an array of bytes. This is simple and will generally
+//! outperform `Read::read_to_end()`, but it will block upon first access.
+//!
+//! ```
+//! use streambuffer::StreamBuffer;
+//! let fstream = StreamBuffer::open("src/lib.rs").unwrap();
+//! let buffer = fstream.as_slice();
+//! assert_eq!(buffer[3..49], b"Streambuffer -- Fast asynchronous file reading"[..]);
+//! ```
+//!
+//! TODO: More and better (non-blocking) examples.
 
 #![warn(missing_docs)]
 
@@ -17,6 +27,7 @@ use std::io;
 use std::fs;
 use std::os::unix::io::AsRawFd;
 use std::path::Path;
+use std::slice;
 
 extern crate libc;
 
@@ -74,6 +85,14 @@ impl StreamBuffer {
             length: length,
         };
         Ok(fstream)
+    }
+
+    /// Returns the file contents as a slice.
+    ///
+    /// Accessing elements of the slice might cause a page fault,
+    /// blocking until the data has been read from disk.
+    pub fn as_slice(&self) -> &[u8] {
+       unsafe { slice::from_raw_parts(self.buffer, self.length) }
     }
 }
 
