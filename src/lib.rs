@@ -5,6 +5,14 @@
 // you may not use this file except in compliance with the License.
 // A copy of the License has been included in the root of the repository.
 
+//! Streambuffer, a library for fast asynchronous file reading.
+//!
+//! # Examples
+//!
+//! TODO: Add example.
+
+#![warn(missing_docs)]
+
 use std::io;
 use std::fs;
 use std::os::unix::io::AsRawFd;
@@ -12,6 +20,7 @@ use std::path::Path;
 
 extern crate libc;
 
+/// A memory-mapped file.
 pub struct StreamBuffer {
   buffer: *const u8,
   length: usize,
@@ -51,6 +60,9 @@ fn unmap_file(buffer: *const u8, length: usize) {
 }
 
 impl StreamBuffer {
+    /// Maps the file at `path` into memory.
+    ///
+    /// TODO: Document what happens when the file is changed after opening.
     pub fn open<P: AsRef<Path>>(path: P) -> io::Result<StreamBuffer> {
         // Open the `fs::File` so we get all of std's error handling for free, then use it to
         // extract the file descriptor. The file is closed again when it goes out of scope, but
