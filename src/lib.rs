@@ -154,15 +154,6 @@ impl StreamBuffer {
         Ok(fstream)
     }
 
-    /// Returns the file contents as a slice.
-    ///
-    /// Accessing elements of the slice might cause a page fault, blocking until the data has been
-    /// read from disk. To avoid blocking, call `prefetch()` and check whether the memory is
-    /// resident with `resident_len()`.
-    pub fn as_slice(&self) -> &[u8] {
-        unsafe { slice::from_raw_parts(self.buffer, self.length) }
-    }
-
     /// Returns the length of the mapped file in bytes.
     pub fn len(&self) -> usize {
         self.length
@@ -225,6 +216,36 @@ impl StreamBuffer {
         cmp::min(length, resident_length)
     }
 
+    /// Returns the file contents as a slice.
+    ///
+    /// Accessing elements of the slice might cause a page fault, blocking until the data has been
+    /// read from disk.
+    ///
+    /// To avoid blocking, call `prefetch()` and check whether the memory is resident with
+    /// `resident_len()`. The `try_slice()` method is similar to `as_slice()`, but it returns
+    /// `None` if accessing the slice would block.
+    pub fn as_slice(&self) -> &[u8] {
+        unsafe { slice::from_raw_parts(self.buffer, self.length) }
+    }
+
+    /// Returns a slice if the requested range is resident in physical memory.
+    ///
+    /// If the slice is not resident, `prefetch()` is called, so that if the same slice is
+    /// requested after a while, it likely is resident.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the specified range lies outside of the buffer.
+    pub fn try_slice(&self, offset: usize, length: usize) -> Option<&[u8]> {
+        // The bounds check assertion is done in `resident_len()`, no need to duplicate it here.
+        if self.resident_len(offset, length) < length {
+            self.prefetch(offset, length);
+            None
+        } else {
+            Some(&self.as_slice()[offset..offset + length])
+        }
+    }
+
     /// Advises the kernel to make a slice of the file resident in physical memory.
     ///
     /// This method does not block, meaning that when the function returns, the slice is not
@@ -246,24 +267,6 @@ impl StreamBuffer {
 
         let buffer = unsafe { self.buffer.offset(aligned_offset as isize) };
         prefetch(buffer, aligned_length);
-    }
-
-    /// Returns a slice if the requested range is resident in physical memory.
-    ///
-    /// If the slice is not resident, `prefetch()` is called, so that if the same slice is
-    /// requested after a while, it likely is resident.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the specified range lies outside of the buffer.
-    pub fn try_slice(&self, offset: usize, length: usize) -> Option<&[u8]> {
-        // The bounds check assertion is done in `resident_len()`, no need to duplicate it here.
-        if self.resident_len(offset, length) < length {
-            self.prefetch(offset, length);
-            None
-        } else {
-            Some(&self.as_slice()[offset..offset + length])
-        }
     }
 }
 
