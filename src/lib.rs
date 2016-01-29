@@ -247,6 +247,24 @@ impl StreamBuffer {
         let buffer = unsafe { self.buffer.offset(aligned_offset as isize) };
         prefetch(buffer, aligned_length);
     }
+
+    /// Returns a slice if the requested range is resident in physical memory.
+    ///
+    /// If the slice is not resident, `prefetch()` is called, so that if the same slice is
+    /// requested after a while, it likely is resident.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the specified range lies outside of the buffer.
+    pub fn try_slice(&self, offset: usize, length: usize) -> Option<&[u8]> {
+        // The bounds check assertion is done in `resident_len()`, no need to duplicate it here.
+        if self.resident_len(offset, length) < length {
+            self.prefetch(offset, length);
+            None
+        } else {
+            Some(&self.as_slice()[offset..offset + length])
+        }
+    }
 }
 
 impl Drop for StreamBuffer {
@@ -270,6 +288,9 @@ fn make_resident() {
 
     // Now at least that part should be resident.
     assert_eq!(fstream.resident_len(3, 12), 12);
+
+    // If it is resident, `try_slice` should return a slice.
+    assert_eq!(fstream.try_slice(3, 12), Some(&b"Streambuffer"[..]));
 }
 
 #[test]
