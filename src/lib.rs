@@ -93,6 +93,17 @@ fn get_resident(buffer: *const u8, length: usize, residency: &mut [bool]) {
     }
 }
 
+/// Requests the kernel to make the specified range of bytes resident in physical memory. `buffer`
+/// must be page-aligned.
+fn prefetch(buffer: *const u8, length: usize) {
+    let result = unsafe {
+        libc::posix_madvise(buffer as *mut libc::c_void, length, libc::POSIX_MADV_WILLNEED)
+    };
+
+    // Any returned error code indicates a programming error, not a runtime error.
+    assert_eq!(0, result);
+}
+
 fn get_page_size() -> usize {
     let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) as usize };
 
@@ -147,8 +158,9 @@ impl StreamBuffer {
 
     /// Returns the file contents as a slice.
     ///
-    /// Accessing elements of the slice might cause a page fault,
-    /// blocking until the data has been read from disk.
+    /// Accessing elements of the slice might cause a page fault, blocking until the data has been
+    /// read from disk. To avoid blocking, call `prefetch()` and check whether the memory is
+    /// resident with `resident_len()`.
     pub fn as_slice(&self) -> &[u8] {
        unsafe { slice::from_raw_parts(self.buffer, self.length) }
     }
@@ -214,6 +226,29 @@ impl StreamBuffer {
         // the length of the buffer, because it is rounded up to the page size.
         cmp::min(length, resident_length)
     }
+
+    /// Advises the kernel to make a slice of the file resident in physical memory.
+    ///
+    /// This method does not block, meaning that when the function returns, the slice is not
+    /// necessarily resident. After this function returns, the kernel may read the requested slice
+    /// from disk and make it resident. Note that this is only an advice, the kernel need not honor
+    /// it.
+    ///
+    /// To check whether the slice is resident at a later time, use `resident_len()`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the specified range lies outside of the buffer.
+    pub fn prefetch(&self, offset: usize, length: usize) {
+        // The specified offset and length must lie within the buffer.
+        assert!(offset + length <= self.length);
+
+        let aligned_offset = round_down_to(offset, self.page_size);
+        let aligned_length = round_up_to(length + (offset - aligned_offset), self.page_size);
+
+        let buffer = unsafe { self.buffer.offset(aligned_offset as isize) };
+        prefetch(buffer, aligned_length);
+    }
 }
 
 impl Drop for StreamBuffer {
@@ -237,4 +272,16 @@ fn make_resident() {
 
     // Now at least that part should be resident.
     assert_eq!(fstream.resident_len(3, 12), 12);
+}
+
+#[test]
+fn prefetch_is_not_harmful() {
+    let fstream = StreamBuffer::open("src/lib.rs").unwrap();
+
+    // It is impossible to test that this actually works without root access to instruct the kernel
+    // to drop its caches, but at least we can verify that calling `prefetch` is not harmful.
+    fstream.prefetch(0, fstream.len());
+
+    // Reading from the file should still work as normal.
+    assert_eq!(fstream.as_slice()[3..15], b"Streambuffer"[..]);
 }
