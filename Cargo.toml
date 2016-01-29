@@ -8,3 +8,6 @@ description = "Fast asynchronous file reading"
 
 [dependencies]
 libc = "0.2.6"
+
+[dev-dependencies]
+rust-crypto = "0.2.34"
