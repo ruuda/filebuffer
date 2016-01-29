@@ -23,16 +23,19 @@
 
 #![warn(missing_docs)]
 
+use std::cmp;
 use std::io;
 use std::fs;
 use std::os::unix::io::AsRawFd;
 use std::path::Path;
 use std::slice;
+use std::thread;
 
 extern crate libc;
 
 /// A memory-mapped file.
 pub struct StreamBuffer {
+  page_size: usize,
   buffer: *const u8,
   length: usize,
 }
@@ -70,6 +73,60 @@ fn unmap_file(buffer: *const u8, length: usize) {
     assert!(result == 0);
 }
 
+/// Writes whether the pages in the range starting at `buffer` with a length of `length` bytes
+/// are resident in physical memory into `residency`. The size of `residency` must be at least
+/// `length / page_size`. Both `buffer` and `length` must be a multiple of the page size.
+fn get_resident(buffer: *const u8, length: usize, residency: &mut [bool]) {
+    let result = unsafe {
+        let residency_uchar = residency.as_mut_ptr() as *mut libc::c_uchar;
+        libc::mincore(buffer as *mut libc::c_void, length, residency_uchar)
+    };
+
+    // Any error code except EAGAIN indicates a programming error.
+    assert!(result == libc::EAGAIN || result == 0);
+
+    // In the rare occasion that the kernel is busy, yield so we don't spam the kernel with
+    // `mincore` calls, then try again.
+    if result == libc::EAGAIN {
+        thread::yield_now();
+        get_resident(buffer, length, residency)
+    }
+}
+
+fn get_page_size() -> usize {
+    let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) as usize };
+
+    // Assert that the page size is a power of two, which is assumed when the page size is used.
+    assert!(page_size != 0);
+    assert_eq!(0, page_size & (page_size - 1));
+
+    page_size
+}
+
+/// Rounds `size` up to the nearest multiple of `power_of_two`.
+fn round_up_to(size: usize, power_of_two: usize) -> usize {
+    (size + (power_of_two - 1)) & !(power_of_two - 1)
+}
+
+#[test]
+fn verify_round_up_to() {
+    assert_eq!(1024, round_up_to(23, 1024));
+    assert_eq!(1024, round_up_to(1024, 1024));
+    assert_eq!(2048, round_up_to(1025, 1024));
+}
+
+/// Rounds `size` down to the nearest multiple of `power_of_two`.
+fn round_down_to(size: usize, power_of_two: usize) -> usize {
+    size & !(power_of_two - 1)
+}
+
+#[test]
+fn verify_round_down_to() {
+    assert_eq!(0, round_down_to(23, 1024));
+    assert_eq!(1024, round_down_to(1024, 1024));
+    assert_eq!(1024, round_down_to(1025, 1024));
+}
+
 impl StreamBuffer {
     /// Maps the file at `path` into memory.
     ///
@@ -81,6 +138,7 @@ impl StreamBuffer {
         let file = try!(fs::File::open(path));
         let (buffer, length) = try!(map_file(&file));
         let fstream = StreamBuffer {
+            page_size: get_page_size(),
             buffer: buffer,
             length: length,
         };
@@ -94,6 +152,68 @@ impl StreamBuffer {
     pub fn as_slice(&self) -> &[u8] {
        unsafe { slice::from_raw_parts(self.buffer, self.length) }
     }
+
+    /// Returns the length of the mapped file in bytes.
+    pub fn len(&self) -> usize {
+        self.length
+    }
+
+    /// Returns the number of bytes resident in physical memory, starting from `offset`.
+    ///
+    /// The slice `[offset..offset + resident_len]` can be accessed without causing page faults or
+    /// disk access. Note that this is only a snapshot, and the kernel might decide to evict pages
+    /// or make them resident at any time.
+    ///
+    /// The returned resident length is at most `length`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the specified range lies outside of the buffer.
+    pub fn resident_len(&self, offset: usize, length: usize) -> usize {
+        // The specified offset and length must lie within the buffer.
+        assert!(offset + length <= self.length);
+
+        let aligned_offset = round_down_to(offset, self.page_size);
+        let aligned_length = round_up_to(length + (offset - aligned_offset), self.page_size);
+        let num_pages = aligned_length / self.page_size;
+
+        // There is a tradeoff here: to store residency information, we need an array of booleans.
+        // The requested range can potentially be very large and it is only known at runtime. We
+        // could allocate a vector here, but that requires a heap allocation just to get residency
+        // information (which might in turn cause a page fault). Instead, check at most 32 pages at
+        // once. This means more syscalls for large ranges, but it saves us the heap allocation,
+        // and for ranges up to 32 pages (128 KiB typically) there is only one syscall.
+        let mut residency = [false; 32];
+        let mut pages_checked = 0;
+        let mut pages_resident = 0;
+
+        while pages_checked < num_pages {
+            let pages_to_check = cmp::min(32, num_pages - pages_checked);
+            let check_offset = (aligned_offset + pages_checked * self.page_size) as isize;
+            let check_buffer = unsafe { self.buffer.offset(check_offset) };
+            let check_length = pages_to_check * self.page_size;
+            get_resident(check_buffer, check_length, &mut residency);
+
+            // Count the number of resident pages.
+            match residency[..pages_to_check].iter().position(|resident| !resident) {
+                Some(non_resident) => {
+                    // The index of the non-resident page is the number of resident pages.
+                    pages_resident += non_resident;
+                    break;
+                }
+                None => {
+                    pages_resident += pages_to_check;
+                    pages_checked += pages_to_check;
+                }
+            }
+        }
+
+        let resident_length = pages_resident * self.page_size + aligned_offset - offset;
+
+        // Never return more than the requested length. The resident length might be larger than
+        // the length of the buffer, because it is rounded up to the page size.
+        cmp::min(length, resident_length)
+    }
 }
 
 impl Drop for StreamBuffer {
@@ -106,4 +226,15 @@ impl Drop for StreamBuffer {
 fn open_file() {
     let fstream = StreamBuffer::open("src/lib.rs");
     assert!(fstream.is_ok());
+}
+
+#[test]
+fn make_resident() {
+    let fstream = StreamBuffer::open("src/lib.rs").unwrap();
+
+    // Touch the first page to make it resident.
+    assert_eq!(fstream.as_slice()[3..15], b"Streambuffer"[..]);
+
+    // Now at least that part should be resident.
+    assert_eq!(fstream.resident_len(3, 12), 12);
 }
