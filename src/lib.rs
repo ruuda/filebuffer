@@ -30,16 +30,16 @@ use std::path::Path;
 use std::ptr;
 use std::slice;
 
-#[cfg(target_family = "unix")]
+#[cfg(unix)]
 mod unix;
 
-#[cfg(target_family = "unix")]
+#[cfg(unix)]
 use unix::{get_resident, get_page_size, map_file, unmap_file, prefetch};
 
-#[cfg(target_family = "windows")]
+#[cfg(windows)]
 mod windows;
 
-#[cfg(target_family = "windows")]
+#[cfg(windows)]
 use windows::{get_resident, get_page_size, map_file, unmap_file, prefetch};
 
 /// A memory-mapped file.

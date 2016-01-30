@@ -12,6 +12,7 @@ use std::io;
 use std::os::windows::io::AsRawHandle;
 use std::ptr;
 
+extern crate kernel32;
 extern crate winapi;
 
 pub fn map_file(file: &fs::File) -> io::Result<(*const u8, usize)> {
