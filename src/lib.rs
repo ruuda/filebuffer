@@ -1,25 +1,25 @@
-// Streambuffer -- Fast asynchronous file reading
+// Filebuffer -- Fast and simple file reading
 // Copyright 2016 Ruud van Asseldonk
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // A copy of the License has been included in the root of the repository.
 
-//! Streambuffer, a library for fast asynchronous file reading.
+//! Filebuffer, a library for fast and simple file reading.
 //!
 //! # Examples
 //!
 //! Map a file into memory and access it as an array of bytes. This is simple and will generally
-//! outperform `Read::read_to_end()`, but it will block upon first access.
+//! outperform `Read::read_to_end()`.
 //!
 //! ```
-//! use streambuffer::StreamBuffer;
-//! let fstream = StreamBuffer::open("src/lib.rs").unwrap();
-//! let buffer = fstream.as_slice();
-//! assert_eq!(buffer[3..49], b"Streambuffer -- Fast asynchronous file reading"[..]);
+//! use filebuffer::FileBuffer;
+//! let fbuffer = FileBuffer::open("src/lib.rs").unwrap();
+//! let buffer = fbuffer.as_slice();
+//! assert_eq!(buffer[3..45], b"Filebuffer -- Fast and simple file reading"[..]);
 //! ```
 //!
-//! TODO: More and better (non-blocking) examples.
+//! TODO: More examples.
 
 #![warn(missing_docs)]
 
@@ -35,7 +35,7 @@ use std::thread;
 extern crate libc;
 
 /// A memory-mapped file.
-pub struct StreamBuffer {
+pub struct FileBuffer {
     page_size: usize,
     buffer: *const u8,
     length: usize,
@@ -137,22 +137,22 @@ fn verify_round_down_to() {
     assert_eq!(1024, round_down_to(1025, 1024));
 }
 
-impl StreamBuffer {
+impl FileBuffer {
     /// Maps the file at `path` into memory.
     ///
     /// TODO: Document what happens when the file is changed after opening.
-    pub fn open<P: AsRef<Path>>(path: P) -> io::Result<StreamBuffer> {
+    pub fn open<P: AsRef<Path>>(path: P) -> io::Result<FileBuffer> {
         // Open the `fs::File` so we get all of std's error handling for free, then use it to
         // extract the file descriptor. The file is closed again when it goes out of scope, but
         // `mmap` only requires the descriptor to be open for the `mmap` call, so this is fine.
         let file = try!(fs::File::open(path));
         let (buffer, length) = try!(map_file(&file));
-        let fstream = StreamBuffer {
+        let fbuffer = FileBuffer {
             page_size: get_page_size(),
             buffer: buffer,
             length: length,
         };
-        Ok(fstream)
+        Ok(fbuffer)
     }
 
     /// Returns the length of the mapped file in bytes.
@@ -287,7 +287,7 @@ impl StreamBuffer {
     }
 }
 
-impl Drop for StreamBuffer {
+impl Drop for FileBuffer {
     fn drop(&mut self) {
         if self.buffer != ptr::null() { unmap_file(self.buffer, self.length); }
     }
@@ -295,55 +295,55 @@ impl Drop for StreamBuffer {
 
 #[test]
 fn open_file() {
-    let fstream = StreamBuffer::open("src/lib.rs");
-    assert!(fstream.is_ok());
+    let fbuffer = FileBuffer::open("src/lib.rs");
+    assert!(fbuffer.is_ok());
 }
 
 #[test]
 fn make_resident() {
-    let fstream = StreamBuffer::open("src/lib.rs").unwrap();
+    let fbuffer = FileBuffer::open("src/lib.rs").unwrap();
 
     // Touch the first page to make it resident.
-    assert_eq!(fstream.as_slice()[3..15], b"Streambuffer"[..]);
+    assert_eq!(fbuffer.as_slice()[3..13], b"Filebuffer"[..]);
 
     // Now at least that part should be resident.
-    assert_eq!(fstream.resident_len(3, 12), 12);
+    assert_eq!(fbuffer.resident_len(3, 10), 10);
 
     // If it is resident, `try_slice` should return a slice.
-    assert_eq!(fstream.try_slice(3, 12), Some(&b"Streambuffer"[..]));
+    assert_eq!(fbuffer.try_slice(3, 10), Some(&b"Filebuffer"[..]));
 }
 
 #[test]
 fn prefetch_is_not_harmful() {
-    let fstream = StreamBuffer::open("src/lib.rs").unwrap();
+    let fbuffer = FileBuffer::open("src/lib.rs").unwrap();
 
     // It is impossible to test that this actually works without root access to instruct the kernel
     // to drop its caches, but at least we can verify that calling `prefetch` is not harmful.
-    fstream.prefetch(0, fstream.len());
+    fbuffer.prefetch(0, fbuffer.len());
 
     // Reading from the file should still work as normal.
-    assert_eq!(fstream.as_slice()[3..15], b"Streambuffer"[..]);
+    assert_eq!(fbuffer.as_slice()[3..13], b"Filebuffer"[..]);
 }
 
 #[test]
 fn open_empty_file_is_fine() {
-    StreamBuffer::open("src/empty_file_for_testing.rs").unwrap();
+    FileBuffer::open("src/empty_file_for_testing.rs").unwrap();
 }
 
 #[test]
 fn empty_file_prefetch_is_fine() {
-    let fstream = StreamBuffer::open("src/empty_file_for_testing.rs").unwrap();
-    fstream.prefetch(0, 0);
+    let fbuffer = FileBuffer::open("src/empty_file_for_testing.rs").unwrap();
+    fbuffer.prefetch(0, 0);
 }
 
 #[test]
 fn empty_file_as_slice_is_fine() {
-    let fstream = StreamBuffer::open("src/empty_file_for_testing.rs").unwrap();
-    assert_eq!(fstream.as_slice().iter().any(|_| true), false);
+    let fbuffer = FileBuffer::open("src/empty_file_for_testing.rs").unwrap();
+    assert_eq!(fbuffer.as_slice().iter().any(|_| true), false);
 }
 
 #[test]
 fn empty_file_has_zero_resident_len() {
-    let fstream = StreamBuffer::open("src/empty_file_for_testing.rs").unwrap();
-    assert_eq!(fstream.resident_len(0, 0), 0);
+    let fbuffer = FileBuffer::open("src/empty_file_for_testing.rs").unwrap();
+    assert_eq!(fbuffer.resident_len(0, 0), 0);
 }

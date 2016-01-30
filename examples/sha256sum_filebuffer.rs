@@ -1,29 +1,28 @@
-// Streambuffer -- Fast asynchronous file reading
+// Filebuffer -- Fast and simple file reading
 // Copyright 2016 Ruud van Asseldonk
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // A copy of the License has been included in the root of the repository.
 
-// This example implements the `sha256sum` program in Rust using the Streambuffer library. Compare
-// with `sha256sum_streambuffer` which uses the IO primitives in the standard library.
+// This example implements the `sha256sum` program in Rust using the Filebuffer library. Compare
+// with `sha256sum_naive` which uses the IO primitives in the standard library.
 
 use std::env;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
-use streambuffer::StreamBuffer;
+use filebuffer::FileBuffer;
 
 extern crate crypto;
-extern crate streambuffer;
+extern crate filebuffer;
 
 fn main() {
     for fname in env::args().skip(1) {
-        let fstream = StreamBuffer::open(&fname).expect("failed to open file");
+        let fbuffer = FileBuffer::open(&fname).expect("failed to open file");
         let mut hasher = Sha256::new();
-        hasher.input(fstream.as_slice());
+        hasher.input(fbuffer.as_slice());
 
         // Match the output format of `sha256sum`, which has two spaces between the hash and name.
         println!("{}  {}", hasher.result_str(), fname);
     }
 }
-

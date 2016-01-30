@@ -1,10 +1,10 @@
 [package]
 
-name = "streambuffer"
+name = "filebuffer"
 version = "0.1.0"
 authors = ["Ruud van Asseldonk <dev@veniogames.com>"]
 license = "Apache-2.0"
-description = "Fast asynchronous file reading"
+description = "Fast and simple file reading"
 
 [dependencies]
 libc = "0.2.6"

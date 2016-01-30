@@ -1,4 +1,4 @@
-// Streambuffer -- Fast asynchronous file reading
+// Filebuffer -- Fast and simple file reading
 // Copyright 2016 Ruud van Asseldonk
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -6,7 +6,7 @@
 // A copy of the License has been included in the root of the repository.
 
 // This example implements the `sha256sum` program in Rust using the IO primitives in the
-// standard library. Compare with `sha256sum_streambuffer` which uses the Streambuffer library.
+// standard library. Compare with `sha256sum_filebuffer` which uses the Filebuffer library.
 
 use std::env;
 use std::fs;
