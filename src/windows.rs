@@ -84,8 +84,16 @@ pub fn unmap_file(buffer: *const u8, _length: usize) {
 }
 
 /// See also `unix::get_resident`.
-pub fn get_resident(buffer: *const u8, length: usize, residency: &mut [bool]) {
-    // TODO: Implement this.
+pub fn get_resident(_buffer: *const u8, _length: usize, residency: &mut [bool]) {
+    // As far as I am aware, Windows does not expose a way to query whether pages are resident.
+    // There is no equivalent of `mincore()`. The closest thing is `VirtualQuery()`, but the
+    // `state` value in the `MEMORY_BASIC_INFORMATION` struct that it fills does not indicate
+    // whether the page is resident.
+
+    // Lie and pretend everything is resident.
+    for x in residency {
+        *x = true;
+    }
 }
 
 /// See also `unix::prefetch`.

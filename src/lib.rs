@@ -115,6 +115,12 @@ impl FileBuffer {
     /// # Panics
     ///
     /// Panics if the specified range lies outside of the buffer.
+    ///
+    /// # Remarks
+    ///
+    /// Windows does not expose a mechanism to query which pages are resident in physical
+    /// memory. Therefore this function optimistically claims that the entire range is resident
+    /// on Windows.
     pub fn resident_len(&self, offset: usize, length: usize) -> usize {
         // The specified offset and length must lie within the buffer.
         assert!(offset + length <= self.length);
