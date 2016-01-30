@@ -49,6 +49,8 @@ pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> 
         return Ok((ptr::null(), 0, platform_data));
     }
 
+    // Memory-mapping a file on Windows is a two-step process: first we create a file mapping
+    // object, and then we create a view of that mapping in the virtual address space.
     platform_data.mapping_handle = unsafe { kernel32::CreateFileMappingW(
         file_handle,
         ptr::null_mut(),              // Use default security policy.
@@ -61,8 +63,18 @@ pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> 
         return Err(io::Error::last_os_error());
     }
 
-    // TODO: Create the view.
-    Ok((ptr::null(), 0, platform_data))
+    let result = unsafe { kernel32::MapViewOfFile(
+        platform_data.mapping_handle,
+        winapi::memoryapi::FILE_MAP_READ, // The memory mapping will be read-only.
+        0, 0,                             // Start offset of the mapping is 0.
+        length)
+    };
+
+    if result == ptr::null_mut() {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok((result as *const u8, length as usize, platform_data))
+    }
 }
 
 pub fn unmap_file(buffer: *const u8, length: usize) {
