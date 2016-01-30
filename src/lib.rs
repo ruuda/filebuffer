@@ -33,20 +33,23 @@ use std::slice;
 #[cfg(unix)]
 mod unix;
 
-#[cfg(unix)]
-use unix::{get_resident, get_page_size, map_file, unmap_file, prefetch};
-
 #[cfg(windows)]
 mod windows;
 
+#[cfg(unix)]
+use unix::{PlatformData, get_resident, get_page_size, map_file, unmap_file, prefetch};
+
 #[cfg(windows)]
-use windows::{get_resident, get_page_size, map_file, unmap_file, prefetch};
+use windows::{PlatformData, get_resident, get_page_size, map_file, unmap_file, prefetch};
 
 /// A memory-mapped file.
 pub struct FileBuffer {
     page_size: usize,
     buffer: *const u8,
     length: usize,
+
+    #[allow(dead_code)] // This field is not dead, it might have an effectful destructor.
+    platform_data: PlatformData,
 }
 
 /// Rounds `size` up to the nearest multiple of `power_of_two`.
@@ -79,14 +82,24 @@ impl FileBuffer {
     /// TODO: Document what happens when the file is changed after opening.
     pub fn open<P: AsRef<Path>>(path: P) -> io::Result<FileBuffer> {
         // Open the `fs::File` so we get all of std's error handling for free, then use it to
-        // extract the file descriptor. The file is closed again when it goes out of scope, but
-        // `mmap` only requires the descriptor to be open for the `mmap` call, so this is fine.
-        let file = try!(fs::File::open(path));
-        let (buffer, length) = try!(map_file(&file));
+        // extract the file descriptor. The file is closed again when `map_file` returns on
+        // Unix-ish platforms, but `mmap` only requires the descriptor to be open for the `mmap`
+        // call, so this is fine. On Windows, the file must be kept open for the lifetime of the
+        // mapping, so `map_file` moves the file into the platform data.
+        let mut open_opts = fs::OpenOptions::new();
+        open_opts.read(true);
+
+        // TODO: On Windows, set `share_mode()` to read-only. This requires the `open_options_ext`
+        // feature that is currently unstable, but it is required to ensure that a different
+        // process does not suddenly modify the contents of the file.
+
+        let file = try!(open_opts.open(path));
+        let (buffer, length, platform_data) = try!(map_file(file));
         let fbuffer = FileBuffer {
             page_size: get_page_size(),
             buffer: buffer,
             length: length,
+            platform_data: platform_data
         };
         Ok(fbuffer)
     }

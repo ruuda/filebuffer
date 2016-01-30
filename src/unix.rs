@@ -6,7 +6,7 @@
 // A copy of the License has been included in the root of the repository.
 
 //! This mod contains the platform-specific implementations of functions based on the libc crate
-//! that is available on unix-ish platforms.
+//! that is available on Unix-ish platforms.
 
 use std::fs;
 use std::io;
@@ -16,7 +16,9 @@ use std::thread;
 
 extern crate libc;
 
-pub fn map_file(file: &fs::File) -> io::Result<(*const u8, usize)> {
+pub struct PlatformData;
+
+pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> {
     let fd = file.as_raw_fd();
     let length = try!(file.metadata()).len();
 
@@ -26,7 +28,7 @@ pub fn map_file(file: &fs::File) -> io::Result<(*const u8, usize)> {
 
     // Don't try to map anything if the file is empty.
     if length == 0 {
-        return Ok((ptr::null(), 0));
+        return Ok((ptr::null(), 0, PlatformData));
     }
 
     let result = unsafe {
@@ -36,7 +38,7 @@ pub fn map_file(file: &fs::File) -> io::Result<(*const u8, usize)> {
     if result == libc::MAP_FAILED {
         Err(io::Error::last_os_error())
     } else {
-        Ok((result as *const u8, length as usize))
+        Ok((result as *const u8, length as usize, PlatformData))
     }
 }
 
