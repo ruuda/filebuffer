@@ -98,7 +98,19 @@ pub fn get_resident(_buffer: *const u8, _length: usize, residency: &mut [bool]) 
 
 /// See also `unix::prefetch`.
 pub fn prefetch(buffer: *const u8, length: usize) {
-    // TODO: Implement this.
+    let mut entry = winapi::memoryapi::WIN32_MEMORY_RANGE_ENTRY {
+        VirtualAddress: buffer as *mut os::raw::c_void,
+        NumberOfBytes: length as u64,
+    };
+
+    unsafe {
+        let current_process_handle = kernel32::GetCurrentProcess();
+        kernel32::PrefetchVirtualMemory(
+            current_process_handle, // Prefetch for the current process.
+            1, &mut entry,          // An array of length 1 that contains `entry`.
+            0                       // Reserved flag that must be 0.
+        );
+    }
 }
 
 pub fn get_page_size() -> usize {
