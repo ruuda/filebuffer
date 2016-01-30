@@ -115,6 +115,10 @@ pub fn prefetch(buffer: *const u8, length: usize) {
             0                       // Reserved flag that must be 0.
         );
     }
+
+    // The return value of `PrefetchVirtualMemory` is ignored. MSDN says the function may fail if
+    // the system is under memory pressure. (It is not entirely clear whether "fail" means
+    // "returns a nonzero value", but I assume it does.)
 }
 
 pub fn get_page_size() -> usize {
