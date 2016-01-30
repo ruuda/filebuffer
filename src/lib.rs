@@ -49,8 +49,6 @@ pub struct FileBuffer {
     length: usize,
 }
 
-
-
 /// Rounds `size` up to the nearest multiple of `power_of_two`.
 fn round_up_to(size: usize, power_of_two: usize) -> usize {
     (size + (power_of_two - 1)) & !(power_of_two - 1)
@@ -275,4 +273,12 @@ fn empty_file_deref_is_fine() {
 fn empty_file_has_zero_resident_len() {
     let fbuffer = FileBuffer::open("src/empty_file_for_testing.rs").unwrap();
     assert_eq!(fbuffer.resident_len(0, 0), 0);
+}
+
+#[test]
+fn page_size_at_least_4096() {
+    // There is no reason why the page size cannot be smaller, it is just that in practice there
+    // is no platform with a smaller page size, so this tests that `get_page_size()` returns
+    // a plausible value.
+    assert!(get_page_size() >= 4096);
 }

@@ -47,6 +47,21 @@ pub fn prefetch(buffer: *const u8, length: usize) {
 }
 
 pub fn get_page_size() -> usize {
-    // TODO: Implement this properly.
-    4096
+    // Fill the `SYSTEM_INFO` struct with zeroes. It will be filled by
+    // `GetSystemInfo` later but Rust requires it to be initialized.
+    let mut sysinfo = winapi::sysinfoapi::SYSTEM_INFO {
+        wProcessorArchitecture: 0,
+        wReserved: 0,
+        dwPageSize: 0,
+        lpMinimumApplicationAddress: ptr::null_mut(),
+        lpMaximumApplicationAddress: ptr::null_mut(),
+        dwActiveProcessorMask: 0,
+        dwNumberOfProcessors: 0,
+        dwProcessorType: 0,
+        dwAllocationGranularity: 0,
+        wProcessorLevel: 0,
+        wProcessorRevision: 0
+    };
+    unsafe { kernel32::GetSystemInfo(&mut sysinfo); }
+    sysinfo.dwPageSize as usize
 }
