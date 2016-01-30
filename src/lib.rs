@@ -9,14 +9,13 @@
 //!
 //! # Examples
 //!
-//! Map a file into memory and access it as an array of bytes. This is simple and will generally
+//! Map a file into memory and access it as a slice of bytes. This is simple and will generally
 //! outperform `Read::read_to_end()`.
 //!
 //! ```
 //! use filebuffer::FileBuffer;
 //! let fbuffer = FileBuffer::open("src/lib.rs").unwrap();
-//! let buffer = fbuffer.as_slice();
-//! assert_eq!(buffer[3..45], b"Filebuffer -- Fast and simple file reading"[..]);
+//! assert_eq!(fbuffer[3..45], b"Filebuffer -- Fast and simple file reading"[..]);
 //! ```
 //!
 //! TODO: More examples.
@@ -26,6 +25,7 @@
 use std::cmp;
 use std::io;
 use std::fs;
+use std::ops::Deref;
 use std::os::unix::io::AsRawFd;
 use std::path::Path;
 use std::ptr;
@@ -155,11 +155,6 @@ impl FileBuffer {
         Ok(fbuffer)
     }
 
-    /// Returns the length of the mapped file in bytes.
-    pub fn len(&self) -> usize {
-        self.length
-    }
-
     /// Returns the number of bytes resident in physical memory, starting from `offset`.
     ///
     /// The slice `[offset..offset + resident_len]` can be accessed without causing page faults or
@@ -227,18 +222,6 @@ impl FileBuffer {
         self.page_size
     }
 
-    /// Returns the file contents as a slice.
-    ///
-    /// Accessing elements of the slice might cause a page fault, blocking until the data has been
-    /// read from disk.
-    ///
-    /// To avoid blocking, call `prefetch()` and check whether the memory is resident with
-    /// `resident_len()`. The `try_slice()` method is similar to `as_slice()`, but it returns
-    /// `None` if accessing the slice would block.
-    pub fn as_slice(&self) -> &[u8] {
-        unsafe { slice::from_raw_parts(self.buffer, self.length) }
-    }
-
     /// Returns a slice if the requested range is resident in physical memory.
     ///
     /// If the slice is not resident, `prefetch()` is called, so that if the same slice is
@@ -256,7 +239,7 @@ impl FileBuffer {
             self.prefetch(offset, length);
             None
         } else {
-            Some(&self.as_slice()[offset..offset + length])
+            Some(&self[offset..offset + length])
         }
     }
 
@@ -293,6 +276,14 @@ impl Drop for FileBuffer {
     }
 }
 
+impl Deref for FileBuffer {
+    type Target = [u8];
+
+    fn deref(&self) -> &[u8] {
+        unsafe { slice::from_raw_parts(self.buffer, self.length) }
+    }
+}
+
 #[test]
 fn open_file() {
     let fbuffer = FileBuffer::open("src/lib.rs");
@@ -304,7 +295,7 @@ fn make_resident() {
     let fbuffer = FileBuffer::open("src/lib.rs").unwrap();
 
     // Touch the first page to make it resident.
-    assert_eq!(fbuffer.as_slice()[3..13], b"Filebuffer"[..]);
+    assert_eq!(fbuffer[3..13], b"Filebuffer"[..]);
 
     // Now at least that part should be resident.
     assert_eq!(fbuffer.resident_len(3, 10), 10);
@@ -322,7 +313,7 @@ fn prefetch_is_not_harmful() {
     fbuffer.prefetch(0, fbuffer.len());
 
     // Reading from the file should still work as normal.
-    assert_eq!(fbuffer.as_slice()[3..13], b"Filebuffer"[..]);
+    assert_eq!(fbuffer[3..13], b"Filebuffer"[..]);
 }
 
 #[test]
@@ -337,9 +328,9 @@ fn empty_file_prefetch_is_fine() {
 }
 
 #[test]
-fn empty_file_as_slice_is_fine() {
+fn empty_file_deref_is_fine() {
     let fbuffer = FileBuffer::open("src/empty_file_for_testing.rs").unwrap();
-    assert_eq!(fbuffer.as_slice().iter().any(|_| true), false);
+    assert_eq!(fbuffer.iter().any(|_| true), false);
 }
 
 #[test]

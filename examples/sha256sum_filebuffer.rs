@@ -20,7 +20,7 @@ fn main() {
     for fname in env::args().skip(1) {
         let fbuffer = FileBuffer::open(&fname).expect("failed to open file");
         let mut hasher = Sha256::new();
-        hasher.input(fbuffer.as_slice());
+        hasher.input(&fbuffer);
 
         // Match the output format of `sha256sum`, which has two spaces between the hash and name.
         println!("{}  {}", hasher.result_str(), fname);
