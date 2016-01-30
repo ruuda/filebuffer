@@ -52,23 +52,27 @@ pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> 
 
     // Memory-mapping a file on Windows is a two-step process: first we create a file mapping
     // object, and then we create a view of that mapping in the virtual address space.
-    platform_data.mapping_handle = unsafe { kernel32::CreateFileMappingW(
-        file_handle,
-        ptr::null_mut(),              // Use default security policy.
-        winapi::winnt::PAGE_READONLY, // The memory will be read-only.
-        0, 0,                         // The mapping size is the size of the file.
-        ptr::null_mut())              // The mapping does not have a name.
+    platform_data.mapping_handle = unsafe {
+        kernel32::CreateFileMappingW(
+            file_handle,
+            ptr::null_mut(),              // Use default security policy.
+            winapi::winnt::PAGE_READONLY, // The memory will be read-only.
+            0, 0,                         // The mapping size is the size of the file.
+            ptr::null_mut()               // The mapping does not have a name.
+        )
     };
 
     if platform_data.mapping_handle == ptr::null_mut() {
         return Err(io::Error::last_os_error());
     }
 
-    let result = unsafe { kernel32::MapViewOfFile(
-        platform_data.mapping_handle,
-        winapi::memoryapi::FILE_MAP_READ, // The memory mapping will be read-only.
-        0, 0,                             // Start offset of the mapping is 0.
-        length)
+    let result = unsafe {
+        kernel32::MapViewOfFile(
+            platform_data.mapping_handle,
+            winapi::memoryapi::FILE_MAP_READ, // The memory mapping will be read-only.
+            0, 0,                             // Start offset of the mapping is 0.
+            length                            // Map the entire file.
+        )
     };
 
     if result == ptr::null_mut() {
