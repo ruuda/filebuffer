@@ -9,6 +9,7 @@
 
 use std::fs;
 use std::io;
+use std::os;
 use std::os::windows::io::AsRawHandle;
 use std::ptr;
 
@@ -77,8 +78,9 @@ pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> 
     }
 }
 
-pub fn unmap_file(buffer: *const u8, length: usize) {
-    // TODO: Implement this.
+pub fn unmap_file(buffer: *const u8, _length: usize) {
+    let success = unsafe { kernel32::UnmapViewOfFile(buffer as *mut os::raw::c_void) };
+    assert!(success != 0);
 }
 
 /// See also `unix::get_resident`.
