@@ -1,0 +1,44 @@
+branches:
+  except:
+    - gh-pages
+
+environment:
+  matrix:
+    - target: 1.5.0-x86_64-pc-windows-msvc
+    - target: 1.5.0-i686-pc-windows-msvc
+    - target: 1.6.0-x86_64-pc-windows-msvc
+    - target: 1.6.0-i686-pc-windows-msvc
+    - target: beta-x86_64-pc-windows-msvc
+    - target: beta-i686-pc-windows-msvc
+    - target: nightly-x86_64-pc-windows-msvc
+    - target: nightly-i686-pc-windows-msvc
+
+install:
+  # Download the Rust and Cargo installer.
+  - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-${env:target}.msi"
+
+  # Install Rust and Cargo and wait for installation to finish by using Write-Output.
+  - ps: msiexec /package "rust-${env:target}.msi" /quiet /norestart | Write-Output
+
+  # Pick up the new Path variable after the installer modified it.
+  - ps: $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
+
+  # Print versions for future reference.
+  - ps: rustc --version
+  - ps: cargo --version
+
+  # We need to run in PowerShell to have Rust in the Path, but if a program
+  # writes to stderr, PowerShell will wrap it in an exception and make Appveyor
+  # think that the build failed. To work around that, run the program with cmd,
+  # and redirect stderr to stdout inside cmd. Then check the exit code to make
+  # the build fail if the command failed.
+  - ps: function run { cmd /c "$args 2>&1"; if ($LastExitCode -ne 0) { throw "command failed" } }
+
+# Prevent the default msbuild-based build.
+build: off
+
+build_script:
+  - ps: run cargo build
+
+test_script:
+  - ps: run cargo test

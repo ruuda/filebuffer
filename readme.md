@@ -2,7 +2,8 @@ Filebuffer
 ==========
 Fast and simple file reading for Rust.
 
-[![Build Status][ci-img]][ci]
+[![Build Status][tr-img]][tr]
+[![Build Status][av-img]][av]
 [![Crates.io version][crate-img]][crate]
 [Documentation][docs]
 
@@ -45,8 +46,10 @@ non-commercial use under the conditions given in the license. If you want to use
 Filebuffer in your GPLv2-licensed software, you can add an [exception][except]
 to your copyright notice.
 
-[ci-img]:    https://travis-ci.org/ruud-v-a/filebuffer.svg?branch=master
-[ci]:        https://travis-ci.org/ruud-v-a/filebuffer
+[tr-img]:    https://travis-ci.org/ruud-v-a/filebuffer.svg?branch=master
+[tr]:        https://travis-ci.org/ruud-v-a/filebuffer
+[av-img]:    https://ci.appveyor.com/api/projects/status/kfacq5ul22hbnd9u?svg=true
+[av]:        https://ci.appveyor.com/project/ruud-v-a/filebuffer
 [crate-img]: http://img.shields.io/crates/v/filebuffer.svg
 [crate]:     https://crates.io/crates/filebuffer
 [docs]:      https://ruud-v-a.github.io/filebuffer/doc/v0.1.0/filebuffer/
