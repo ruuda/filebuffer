@@ -5,7 +5,7 @@ Fast and simple file reading for Rust.
 [![Build Status][tr-img]][tr]
 [![Build Status][av-img]][av]
 [![Crates.io version][crate-img]][crate]
-[Documentation][docs]
+[![Documentation][docs-img]][docs]
 
 Filebuffer can map files into memory. This is ofter faster than using the
 primitives in `std::io`, and also more convenient. Furthermore this crate
@@ -52,6 +52,7 @@ to your copyright notice.
 [av]:        https://ci.appveyor.com/project/ruud-v-a/filebuffer
 [crate-img]: http://img.shields.io/crates/v/filebuffer.svg
 [crate]:     https://crates.io/crates/filebuffer
+[docs-img]:  http://img.shields.io/badge/docs-online-blue.svg
 [docs]:      https://ruud-v-a.github.io/filebuffer/doc/v0.1.0/filebuffer/
 [apache2]:   https://www.apache.org/licenses/LICENSE-2.0
 [except]:    https://www.gnu.org/licenses/gpl-faq.html#GPLIncompatibleLibs
