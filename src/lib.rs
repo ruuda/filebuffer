@@ -170,9 +170,12 @@ impl FileBuffer {
         cmp::min(length, resident_length)
     }
 
-    /// Returns a good chunk length if the file is to be processed in chunks.
+    /// Returns the system page size.
     ///
-    /// This just returns the page size. Multiples of this are fine too.
+    /// When the kernel makes the file resident in physical memory, it does so with page
+    /// granularity. (In practice this happens in larger chunks, but still in multiples of
+    /// the page size.) Therefore, when processing the file in chunks, this is a good chunk
+    /// length.
     pub fn chunk_len_hint(&self) -> usize {
         self.page_size
     }
