@@ -233,6 +233,10 @@ impl FileBuffer {
     }
 }
 
+// There is no possibility of data races when passing `&FileBuffer` across threads,
+// because the buffer is read-only. `&FileBuffer` has no interior mutability.
+unsafe impl Sync for FileBuffer {}
+
 // It is safe to move a `FileBuffer` into a different thread.
 unsafe impl Send for FileBuffer {}
 
@@ -298,6 +302,20 @@ fn fbuffer_can_be_moved_into_thread() {
     thread::spawn(move || {
         assert_eq!(&fbuffer[3..13], &b"Filebuffer"[..]);
     });
+}
+
+#[test]
+fn fbuffer_can_be_shared_among_threads() {
+    use std::sync;
+    use std::thread;
+
+    let fbuffer = FileBuffer::open("src/lib.rs").unwrap();
+    let buffer1 = sync::Arc::new(fbuffer);
+    let buffer2 = buffer1.clone();
+    thread::spawn(move || {
+        assert_eq!(&buffer2[3..13], &b"Filebuffer"[..]);
+    });
+    assert_eq!(&buffer1[17..45], &b"Fast and simple file reading"[..]);
 }
 
 #[test]
