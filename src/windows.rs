@@ -104,7 +104,7 @@ pub fn get_resident(_buffer: *const u8, _length: usize, residency: &mut [bool]) 
 pub fn prefetch(buffer: *const u8, length: usize) {
     let mut entry = winapi::memoryapi::WIN32_MEMORY_RANGE_ENTRY {
         VirtualAddress: buffer as *mut os::raw::c_void,
-        NumberOfBytes: length as u64,
+        NumberOfBytes: length as winapi::basetsd::SIZE_T,
     };
 
     unsafe {
