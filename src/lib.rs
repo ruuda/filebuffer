@@ -44,10 +44,11 @@ use windows::{PlatformData, get_resident, get_page_size, map_file, unmap_file, p
 ///
 /// # Safety
 ///
-/// **On Unix-ish platforms, external modifications to the file made after the `FileBuffer` was
-/// opened can show up in this `FileBuffer`.** On Windows it is possible to prevent this by opening
-/// the file in exclusive mode, but that functionality is not available in stable Rust currently.
-/// (Filestream will be updated after stabilization.)
+/// **On Unix-ish platforms, external modifications to the file made after the file buffer was
+/// opened can show up in this file buffer.** In particular, if a file is truncated after opening,
+/// accessing the removed part causes undefined behavior. On Windows it is possible to prevent this
+/// by opening the file in exclusive mode, but that functionality is not available in stable Rust
+/// currently. (Filestream will be updated after stabilization.)
 ///
 /// It is recommended to ensure that other applications do not write to the file when it is mapped,
 /// possibly by marking the file read-only. (Though even this is no guarantee.)
@@ -214,14 +215,14 @@ impl FileBuffer {
 
     /// Leaks the file buffer as a byte slice.
     ///
-    /// This prevents the buffer from being freed, keeping the file mapped until the program ends.
-    /// This is not as bad as it sounds, because the kernel is free to evict pages from physical
-    /// memory in case of memory pressure. Because the file is mapped read-only, it can always be
-    /// read from disk again.
+    /// This prevents the buffer from being unmapped, keeping the file mapped until the program
+    /// ends. This is not as bad as it sounds, because the kernel is free to evict pages from
+    /// physical memory in case of memory pressure. Because the file is mapped read-only, it can
+    /// always be read from disk again.
     ///
     /// If the file buffer is going to be open for the entire duration of the program anyway, this
     /// method can avoid some lifetime issues. Still, it is good practice to close the file buffer
-    /// if possible.
+    /// if possible. This method should be a last resort.
     pub fn leak(mut self) -> &'static [u8] {
         let buffer = unsafe { slice::from_raw_parts(self.buffer, self.length) };
 
