@@ -43,6 +43,16 @@ use unix::{PlatformData, get_resident, get_page_size, map_file, unmap_file, pref
 use windows::{PlatformData, get_resident, get_page_size, map_file, unmap_file, prefetch};
 
 /// A memory-mapped file.
+///
+/// # Safety
+///
+/// **On Unix-ish platforms, external modifications to the file made after the `FileBuffer` was
+/// opened can show up in this `FileBuffer`.** On Windows it is possible to prevent this by opening
+/// the file in exclusive mode, but that functionality is not available in stable Rust currently.
+/// (Filestream will be updated after stabilization.)
+///
+/// It is recommended to ensure that other applications do not write to the file when it is mapped,
+/// possibly by marking the file read-only. (Though even this is no guarantee.)
 pub struct FileBuffer {
     page_size: usize,
     buffer: *const u8,
@@ -78,8 +88,6 @@ fn verify_round_down_to() {
 
 impl FileBuffer {
     /// Maps the file at `path` into memory.
-    ///
-    /// TODO: Document what happens when the file is changed after opening.
     pub fn open<P: AsRef<Path>>(path: P) -> io::Result<FileBuffer> {
         // Open the `fs::File` so we get all of std's error handling for free, then use it to
         // extract the file descriptor. The file is closed again when `map_file` returns on
