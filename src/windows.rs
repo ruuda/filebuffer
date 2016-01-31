@@ -71,7 +71,7 @@ pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> 
             platform_data.mapping_handle,
             winapi::memoryapi::FILE_MAP_READ, // The memory mapping will be read-only.
             0, 0,                             // Start offset of the mapping is 0.
-            length                            // Map the entire file.
+            length as winapi::basetsd::SIZE_T // Map the entire file.
         )
     };
 
