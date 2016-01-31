@@ -17,8 +17,6 @@
 //! let fbuffer = FileBuffer::open("src/lib.rs").unwrap();
 //! assert_eq!(&fbuffer[3..45], &b"Filebuffer -- Fast and simple file reading"[..]);
 //! ```
-//!
-//! TODO: More examples.
 
 #![warn(missing_docs)]
 
@@ -213,6 +211,26 @@ impl FileBuffer {
         let buffer = unsafe { self.buffer.offset(aligned_offset as isize) };
         prefetch(buffer, aligned_length);
     }
+
+    /// Leaks the file buffer as a byte slice.
+    ///
+    /// This prevents the buffer from being freed, keeping the file mapped until the program ends.
+    /// This is not as bad as it sounds, because the kernel is free to evict pages from physical
+    /// memory in case of memory pressure. Because the file is mapped read-only, it can always be
+    /// read from disk again.
+    ///
+    /// If the file buffer is going to be open for the entire duration of the program anyway, this
+    /// method can avoid some lifetime issues. Still, it is good practice to close the file buffer
+    /// if possible.
+    pub fn leak(mut self) -> &'static [u8] {
+        let buffer = unsafe { slice::from_raw_parts(self.buffer, self.length) };
+
+        // Prevent `drop()` from freeing the buffer.
+        self.buffer = ptr::null();
+        self.length = 0;
+
+        buffer
+    }
 }
 
 impl Drop for FileBuffer {
@@ -256,6 +274,17 @@ fn prefetch_is_not_harmful() {
 
     // Reading from the file should still work as normal.
     assert_eq!(&fbuffer[3..13], &b"Filebuffer"[..]);
+}
+
+#[test]
+fn drop_after_leak() {
+    let mut bytes = &[0u8][..];
+    assert_eq!(bytes[0], 0);
+    {
+        let fbuffer = FileBuffer::open("src/lib.rs").unwrap();
+        bytes = fbuffer.leak();
+    }
+    assert_eq!(&bytes[3..13], &b"Filebuffer"[..]);
 }
 
 #[test]
