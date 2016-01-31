@@ -15,7 +15,7 @@
 //! ```
 //! use filebuffer::FileBuffer;
 //! let fbuffer = FileBuffer::open("src/lib.rs").unwrap();
-//! assert_eq!(fbuffer[3..45], b"Filebuffer -- Fast and simple file reading"[..]);
+//! assert_eq!(&fbuffer[3..45], &b"Filebuffer -- Fast and simple file reading"[..]);
 //! ```
 //!
 //! TODO: More examples.
@@ -232,7 +232,7 @@ fn make_resident() {
     let fbuffer = FileBuffer::open("src/lib.rs").unwrap();
 
     // Touch the first page to make it resident.
-    assert_eq!(fbuffer[3..13], b"Filebuffer"[..]);
+    assert_eq!(&fbuffer[3..13], &b"Filebuffer"[..]);
 
     // Now at least that part should be resident.
     assert_eq!(fbuffer.resident_len(3, 10), 10);
@@ -247,7 +247,7 @@ fn prefetch_is_not_harmful() {
     fbuffer.prefetch(0, fbuffer.len());
 
     // Reading from the file should still work as normal.
-    assert_eq!(fbuffer[3..13], b"Filebuffer"[..]);
+    assert_eq!(&fbuffer[3..13], &b"Filebuffer"[..]);
 }
 
 #[test]
