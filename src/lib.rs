@@ -233,6 +233,9 @@ impl FileBuffer {
     }
 }
 
+// It is safe to move a `FileBuffer` into a different thread.
+unsafe impl Send for FileBuffer {}
+
 impl Drop for FileBuffer {
     fn drop(&mut self) {
         if self.buffer != ptr::null() { unmap_file(self.buffer, self.length); }
@@ -285,6 +288,16 @@ fn drop_after_leak() {
         bytes = fbuffer.leak();
     }
     assert_eq!(&bytes[3..13], &b"Filebuffer"[..]);
+}
+
+#[test]
+fn fbuffer_can_be_moved_into_thread() {
+    use std::thread;
+
+    let fbuffer = FileBuffer::open("src/lib.rs").unwrap();
+    thread::spawn(move || {
+        assert_eq!(&fbuffer[3..13], &b"Filebuffer"[..]);
+    });
 }
 
 #[test]
