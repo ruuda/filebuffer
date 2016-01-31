@@ -1,14 +1,17 @@
 [package]
-
 name = "filebuffer"
 version = "0.1.0"
 authors = ["Ruud van Asseldonk <dev@veniogames.com>"]
 license = "Apache-2.0"
+readme = "readme.md"
+keywords = ["non-blocking", "memory-mapped", "file", "input", "buffer", "prefetch", "mmap", "madvise", "mincore"]
 description = "Fast and simple file reading"
+repository = "https://github.com/ruud-v-a/filebuffer"
+documentation = "https://ruud-v-a.github.io/filebuffer/doc/v0.1.0/filebuffer/"
 
 [dependencies]
-# TODO: Depend only on libc for Unix-like platforms, and on winapi on Windows
-# once RFC 1361 lands.
+# TODO: Depend only on libc for Unix-like platforms,
+# and on winapi on Windows once RFC 1361 lands.
 # https://github.com/rust-lang/rfcs/blob/master/text/1361-cargo-cfg-dependencies.md
 libc = "0.2.6"
 kernel32-sys = "0.2.1"
