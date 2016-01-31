@@ -177,27 +177,6 @@ impl FileBuffer {
         self.page_size
     }
 
-    /// Returns a slice if the requested range is resident in physical memory.
-    ///
-    /// If the slice is not resident, `prefetch()` is called, so that if the same slice is
-    /// requested after a while, it likely is resident.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the specified range lies outside of the buffer.
-    pub fn try_slice(&self, offset: usize, length: usize) -> Option<&[u8]> {
-        // TODO: Due to Rust internals, returning `Some` when `self.buffer` is null, is not
-        // possible. But should this method return an option anyway?
-
-        // The bounds check assertion is done in `resident_len()`, no need to duplicate it here.
-        if self.resident_len(offset, length) < length {
-            self.prefetch(offset, length);
-            None
-        } else {
-            Some(&self[offset..offset + length])
-        }
-    }
-
     /// Advises the kernel to make a slice of the file resident in physical memory.
     ///
     /// This method does not block, meaning that when the function returns, the slice is not
@@ -254,9 +233,6 @@ fn make_resident() {
 
     // Now at least that part should be resident.
     assert_eq!(fbuffer.resident_len(3, 10), 10);
-
-    // If it is resident, `try_slice` should return a slice.
-    assert_eq!(fbuffer.try_slice(3, 10), Some(&b"Filebuffer"[..]));
 }
 
 #[test]
