@@ -200,6 +200,7 @@ impl FileBuffer {
     ///
     /// Panics if the specified range lies outside of the buffer.
     pub fn prefetch(&self, offset: usize, length: usize) {
+        // TODO: This function should use `collections::range::RangeArgument` once stabilized.
         // The specified offset and length must lie within the buffer.
         assert!(offset + length <= self.length);
 
