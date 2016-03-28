@@ -48,7 +48,7 @@ use windows::{PlatformData, get_resident, get_page_size, map_file, unmap_file, p
 /// opened can show up in this file buffer.** In particular, if a file is truncated after opening,
 /// accessing the removed part causes undefined behavior. On Windows it is possible to prevent this
 /// by opening the file in exclusive mode, but that functionality is not available in stable Rust
-/// currently. (Filestream will be updated after stabilization.)
+/// currently. (Filebuffer will be updated after stabilization.)
 ///
 /// It is recommended to ensure that other applications do not write to the file when it is mapped,
 /// possibly by marking the file read-only. (Though even this is no guarantee.)
