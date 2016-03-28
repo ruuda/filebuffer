@@ -96,9 +96,10 @@ impl FileBuffer {
         let mut open_opts = fs::OpenOptions::new();
         open_opts.read(true);
 
-        // TODO: On Windows, set `share_mode()` to read-only. This requires the `open_options_ext`
-        // feature that is currently unstable, but it is required to ensure that a different
-        // process does not suddenly modify the contents of the file.
+        // TODO: On Windows, set `share_mode()` to read-only. This requires the
+        // `open_options_ext` feature that is currently unstable, but it is
+        // required to ensure that a different process does not suddenly modify
+        // the contents of the file. See also Rust issue 27720.
 
         let file = try!(open_opts.open(path));
         let (buffer, length, platform_data) = try!(map_file(file));
