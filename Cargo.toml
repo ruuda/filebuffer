@@ -9,10 +9,11 @@ description = "Fast and simple file reading"
 repository = "https://github.com/ruud-v-a/filebuffer"
 documentation = "https://ruud-v-a.github.io/filebuffer/doc/v0.1.0/filebuffer/"
 
-[target.'cfg(unix)'.dependencies]
+[dependencies]
+# TODO: Depend only on libc for Unix-like platforms,
+# and on winapi on Windows once RFC 1361 lands.
+# https://github.com/rust-lang/rfcs/blob/master/text/1361-cargo-cfg-dependencies.md
 libc = "0.2.6"
-
-[target.'cfg(windows)'.dependencies]
 kernel32-sys = "0.2.1"
 winapi = "0.2.5"
 
