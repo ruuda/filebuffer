@@ -6,8 +6,8 @@ license = "Apache-2.0"
 readme = "readme.md"
 keywords = ["non-blocking", "memory-mapped", "file", "input", "prefetch"]
 description = "Fast and simple file reading"
-repository = "https://github.com/ruud-v-a/filebuffer"
-documentation = "https://ruud-v-a.github.io/filebuffer/doc/v0.1.0/filebuffer/"
+repository = "https://github.com/ruuda/filebuffer"
+documentation = "https://ruuda.github.io/filebuffer/doc/v0.1.0/filebuffer/"
 
 [dependencies]
 # TODO: Depend only on libc for Unix-like platforms,

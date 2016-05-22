@@ -46,13 +46,13 @@ non-commercial use under the conditions given in the license. If you want to use
 Filebuffer in your GPLv2-licensed software, you can add an [exception][except]
 to your copyright notice.
 
-[tr-img]:    https://travis-ci.org/ruud-v-a/filebuffer.svg?branch=master
-[tr]:        https://travis-ci.org/ruud-v-a/filebuffer
+[tr-img]:    https://travis-ci.org/ruuda/filebuffer.svg?branch=master
+[tr]:        https://travis-ci.org/ruuda/filebuffer
 [av-img]:    https://ci.appveyor.com/api/projects/status/kfacq5ul22hbnd9u?svg=true
-[av]:        https://ci.appveyor.com/project/ruud-v-a/filebuffer
+[av]:        https://ci.appveyor.com/project/ruuda/filebuffer
 [crate-img]: http://img.shields.io/crates/v/filebuffer.svg
 [crate]:     https://crates.io/crates/filebuffer
 [docs-img]:  http://img.shields.io/badge/docs-online-blue.svg
-[docs]:      https://ruud-v-a.github.io/filebuffer/doc/v0.1.0/filebuffer/
+[docs]:      https://ruuda.github.io/filebuffer/doc/v0.1.0/filebuffer/
 [apache2]:   https://www.apache.org/licenses/LICENSE-2.0
 [except]:    https://www.gnu.org/licenses/gpl-faq.html#GPLIncompatibleLibs
