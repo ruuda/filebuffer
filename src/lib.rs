@@ -344,3 +344,31 @@ fn page_size_at_least_4096() {
     // a plausible value.
     assert!(get_page_size() >= 4096);
 }
+
+#[cfg(windows)]
+#[test]
+fn windows_share_mode() {
+    use std::fs;
+
+    let mut write_opts = fs::OpenOptions::new();
+    write_opts.read(true);
+    write_opts.write(true);
+
+    {
+        let fbuffer1 = FileBuffer::open("src/lib.rs");
+        let fbuffer2 = FileBuffer::open("src/lib.rs");
+
+        // Opening the file multiple times for reading is fine.
+        assert!(fbuffer1.is_ok());
+        assert!(fbuffer2.is_ok());
+
+        // Opening a file for writing should fail due to the share mode.
+        let file = write_opts.open("src/lib.rs");
+        assert!(file.is_err());
+    }
+
+    // Once the filebuffers went out of scope, it should be possible to open the
+    // file for writing.
+    let file = write_opts.open("src/lib.rs");
+    assert!(file.is_ok());
+}
