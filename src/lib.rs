@@ -22,7 +22,6 @@
 
 use std::cmp;
 use std::io;
-use std::fs;
 use std::ops::Deref;
 use std::path::Path;
 use std::ptr;
@@ -35,10 +34,10 @@ mod unix;
 mod windows;
 
 #[cfg(unix)]
-use unix::{PlatformData, get_resident, get_page_size, map_file, unmap_file, prefetch};
+use unix::{PlatformData, get_open_options, get_resident, get_page_size, map_file, unmap_file, prefetch};
 
 #[cfg(windows)]
-use windows::{PlatformData, get_resident, get_page_size, map_file, unmap_file, prefetch};
+use windows::{PlatformData, get_open_options, get_resident, get_page_size, map_file, unmap_file, prefetch};
 
 /// A memory-mapped file.
 ///
@@ -93,15 +92,7 @@ impl FileBuffer {
         // Unix-ish platforms, but `mmap` only requires the descriptor to be open for the `mmap`
         // call, so this is fine. On Windows, the file must be kept open for the lifetime of the
         // mapping, so `map_file` moves the file into the platform data.
-        let mut open_opts = fs::OpenOptions::new();
-        open_opts.read(true);
-
-        // TODO: On Windows, set `share_mode()` to read-only. This requires the
-        // `open_options_ext` feature that is currently unstable, but it is
-        // required to ensure that a different process does not suddenly modify
-        // the contents of the file. See also Rust issue 27720.
-
-        let file = try!(open_opts.open(path));
+        let file = try!(get_open_options().open(path));
         let (buffer, length, platform_data) = try!(map_file(file));
         let fbuffer = FileBuffer {
             page_size: get_page_size(),

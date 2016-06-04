@@ -18,6 +18,12 @@ extern crate libc;
 
 pub struct PlatformData;
 
+pub fn get_open_options() -> fs::OpenOptions {
+    let mut open_opts = fs::OpenOptions::new();
+    open_opts.read(true);
+    open_opts
+}
+
 pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> {
     let fd = file.as_raw_fd();
     let length = try!(file.metadata()).len();

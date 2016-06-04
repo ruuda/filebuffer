@@ -10,6 +10,7 @@
 use std::fs;
 use std::io;
 use std::os;
+use std::os::windows::fs::OpenOptionsExt;
 use std::os::windows::io::AsRawHandle;
 use std::ptr;
 
@@ -30,6 +31,18 @@ impl Drop for PlatformData {
             assert!(success != 0);
         }
     }
+}
+
+pub fn get_open_options() -> fs::OpenOptions {
+    let mut open_opts = fs::OpenOptions::new();
+    open_opts.read(true);
+
+    // Set the share mode to read-only. This prevents external modifications to
+    // the file, which ensures that the buffer contents do not change under our
+    // feet.
+    open_opts.share_mode(winapi::FILE_SHARE_READ);
+
+    open_opts
 }
 
 pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> {
