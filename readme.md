@@ -53,6 +53,6 @@ to your copyright notice.
 [crate-img]: http://img.shields.io/crates/v/filebuffer.svg
 [crate]:     https://crates.io/crates/filebuffer
 [docs-img]:  http://img.shields.io/badge/docs-online-blue.svg
-[docs]:      https://ruuda.github.io/filebuffer/doc/v0.1.0/filebuffer/
+[docs]:      https://docs.rs/filebuffer
 [apache2]:   https://www.apache.org/licenses/LICENSE-2.0
 [except]:    https://www.gnu.org/licenses/gpl-faq.html#GPLIncompatibleLibs

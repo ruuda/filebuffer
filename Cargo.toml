@@ -7,7 +7,7 @@ readme = "readme.md"
 keywords = ["non-blocking", "mmap", "file", "input", "prefetch"]
 description = "Fast and simple file reading"
 repository = "https://github.com/ruuda/filebuffer"
-documentation = "https://ruuda.github.io/filebuffer/doc/v0.1.0/filebuffer/"
+documentation = "https://docs.rs/filebuffer"
 
 [dependencies]
 # TODO: Depend only on libc for Unix-like platforms,
