@@ -19,3 +19,9 @@ winapi = "0.2.5"
 
 [dev-dependencies]
 rust-crypto = "0.2.34"
+
+# Version 0.3.36 of the gcc crate (a dependency of rust-crypto) breaks backwards
+# compatibility with Rust 1.4 through 1.6, so force a less recent version. This
+# is only for building the application, so dependencies of Filebuffer are not
+# affected by this override.
+gcc = "= 0.3.35"
