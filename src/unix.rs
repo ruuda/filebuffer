@@ -12,7 +12,6 @@ use std::fs;
 use std::io;
 use std::os::unix::io::AsRawFd;
 use std::ptr;
-use std::thread;
 
 extern crate libc;
 
@@ -55,6 +54,8 @@ pub fn unmap_file(buffer: *const u8, length: usize) {
 /// `length / page_size`. Both `buffer` and `length` must be a multiple of the page size.
 #[cfg(not(target_os = "macos"))]
 pub fn get_resident(buffer: *const u8, length: usize, residency: &mut [bool]) {
+    use std::thread;
+
     let result = unsafe {
         // Note: the libc on Mac OS uses a signed char instead of an unsigned
         // one, which is why this function is disabled on Mac OS. There is a
