@@ -8,18 +8,14 @@
 //! This mod contains the platform-specific implementations of functions based on the libc crate
 //! that is available on Mac OS X platforms.
 
-use std::fs;
-use std::io;
-use std::os::unix::io::AsRawFd;
-use std::ptr;
-use std::thread;
-
 extern crate libc;
 
 /// Writes whether the pages in the range starting at `buffer` with a length of `length` bytes
 /// are resident in physical memory into `residency`. The size of `residency` must be at least
 /// `length / page_size`. Both `buffer` and `length` must be a multiple of the page size.
 pub fn get_resident(buffer: *const u8, length: usize, residency: &mut [bool]) {
+    use std::thread;
+
     let result = unsafe {
         // Note that the type here is a signed char, unlike the libc on other
         // platforms. The regular version of this function is in unix.rs.
