@@ -30,3 +30,9 @@ rust-crypto = "0.2.34"
 # is only for building the application, so dependencies of Filebuffer are not
 # affected by this override.
 gcc = "= 0.3.35"
+
+# Version 0.1.36 of the time crate (a dependency of rust-crypto) breaks
+# backwards compatibility with Rust 1.4 through 1.7, so force a less recent
+# version. This is only for building the application, so dependencies of
+# Filebuffer are not affected by this override.
+time = "= 0.1.35"
