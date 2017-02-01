@@ -50,9 +50,9 @@ to your copyright notice.
 [tr]:        https://travis-ci.org/ruuda/filebuffer
 [av-img]:    https://ci.appveyor.com/api/projects/status/kfacq5ul22hbnd9u?svg=true
 [av]:        https://ci.appveyor.com/project/ruuda/filebuffer
-[crate-img]: http://img.shields.io/crates/v/filebuffer.svg
+[crate-img]: https://img.shields.io/crates/v/filebuffer.svg
 [crate]:     https://crates.io/crates/filebuffer
-[docs-img]:  http://img.shields.io/badge/docs-online-blue.svg
+[docs-img]:  https://img.shields.io/badge/docs-online-blue.svg
 [docs]:      https://docs.rs/filebuffer
 [apache2]:   https://www.apache.org/licenses/LICENSE-2.0
 [except]:    https://www.gnu.org/licenses/gpl-faq.html#GPLIncompatibleLibs
