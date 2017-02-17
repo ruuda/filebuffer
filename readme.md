@@ -7,7 +7,7 @@ Fast and simple file reading for Rust.
 [![Crates.io version][crate-img]][crate]
 [![Documentation][docs-img]][docs]
 
-Filebuffer can map files into memory. This is ofter faster than using the
+Filebuffer can map files into memory. This is often faster than using the
 primitives in `std::io`, and also more convenient. Furthermore this crate
 offers prefetching and checking whether file data is resident in physical
 memory (so access will not incur a page fault). This enables non-blocking
