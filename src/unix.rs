@@ -16,6 +16,7 @@ use std::thread;
 
 extern crate libc;
 
+#[derive(Debug)]
 pub struct PlatformData;
 
 pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> {

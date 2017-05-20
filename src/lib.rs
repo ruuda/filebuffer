@@ -52,6 +52,7 @@ use windows::{PlatformData, get_resident, get_page_size, map_file, unmap_file, p
 ///
 /// It is recommended to ensure that other applications do not write to the file when it is mapped,
 /// possibly by marking the file read-only. (Though even this is no guarantee.)
+#[derive(Debug)]
 pub struct FileBuffer {
     page_size: usize,
     buffer: *const u8,
