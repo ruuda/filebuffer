@@ -16,6 +16,7 @@ use std::ptr;
 extern crate kernel32;
 extern crate winapi;
 
+#[derive(Debug)]
 pub struct PlatformData {
     // On Windows, the file must be kept open for the lifetime of the mapping.
     #[allow(dead_code)] // The field is not dead, the destructor is effectful.
