@@ -1,6 +1,6 @@
 [package]
 name = "filebuffer"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Ruud van Asseldonk <dev@veniogames.com>"]
 license = "Apache-2.0"
 readme = "readme.md"
@@ -11,8 +11,8 @@ repository = "https://github.com/ruuda/filebuffer"
 documentation = "https://docs.rs/filebuffer"
 
 [badges]
-travis-ci = { repository = "ruuda/filebuffer", branch = "v0.1.1" }
-appveyor = { repository = "ruuda/filebuffer", branch = "v0.1.1" }
+travis-ci = { repository = "ruuda/filebuffer", branch = "v0.2.0" }
+appveyor = { repository = "ruuda/filebuffer", branch = "v0.2.0" }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2.6"
