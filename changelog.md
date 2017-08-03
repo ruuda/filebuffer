@@ -1,6 +1,17 @@
 Changelog
 =========
 
+0.3.0
+-----
+
+Released 2017-08-03.
+
+ * Add support for Mac OS X.
+ * Implement `AsRef<[u8]>` for `Filebuffer`.
+ * Ensures compatibility with Rust 1.8 through 1.19 stable.
+
+Thanks to Craig M. Brandenburg for contributing to this release.
+
 0.2.0
 -----
 
