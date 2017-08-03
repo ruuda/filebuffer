@@ -267,6 +267,12 @@ impl Deref for FileBuffer {
     }
 }
 
+impl AsRef<[u8]> for FileBuffer {
+    fn as_ref(&self) -> &[u8] {
+        self.deref()
+    }
+}
+
 #[test]
 fn open_file() {
     let fbuffer = FileBuffer::open("src/lib.rs");
