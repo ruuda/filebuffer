@@ -1,6 +1,6 @@
 [root]
 name = "filebuffer"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "gcc 0.3.35 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.20 (registry+https://github.com/rust-lang/crates.io-index)",
