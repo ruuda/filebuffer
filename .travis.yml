@@ -9,16 +9,13 @@ matrix:
       rust: 1.10.0
 
     - os: linux
-      rust: 1.12.0
-
-    - os: linux
       rust: 1.14.0
 
     - os: linux
-      rust: 1.16.0
+      rust: 1.18.0
 
     - os: linux
-      rust: 1.18.0
+      rust: 1.22.0
 
     - os: linux
       rust: beta
