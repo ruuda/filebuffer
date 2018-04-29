@@ -10,7 +10,6 @@
 use std::fs;
 use std::io;
 use std::mem;
-use std::os;
 use std::os::windows::io::AsRawHandle;
 use std::ptr;
 
