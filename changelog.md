@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.4.0
+-----
+
+Released 2018-04-29.
+
+ * Bump `winapi` dependency to 0.3.
+ * Ensures compatibility with Rust 1.8 through 1.25 stable.
+
 0.3.0
 -----
 
