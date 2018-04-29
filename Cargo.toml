@@ -18,7 +18,7 @@ appveyor = { repository = "ruuda/filebuffer", branch = "v0.3.0" }
 libc = "0.2.6"
 
 [target.'cfg(windows)'.dependencies]
-winapi = "0.3"
+winapi = { version = "0.3", features = ["handleapi", "memoryapi", "processthreadsapi", "sysinfoapi", "winnt"] }
 
 [dev-dependencies]
 rust-crypto = "0.2.34"

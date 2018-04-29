@@ -13,7 +13,6 @@ use std::os;
 use std::os::windows::io::AsRawHandle;
 use std::ptr;
 
-extern crate kernel32;
 extern crate winapi;
 
 #[derive(Debug)]
@@ -21,13 +20,13 @@ pub struct PlatformData {
     // On Windows, the file must be kept open for the lifetime of the mapping.
     #[allow(dead_code)] // The field is not dead, the destructor is effectful.
     file: fs::File,
-    mapping_handle: winapi::winnt::HANDLE,
+    mapping_handle: winapi::um::winnt::HANDLE,
 }
 
 impl Drop for PlatformData {
     fn drop (&mut self) {
         if self.mapping_handle != ptr::null_mut() {
-            let success = unsafe { kernel32::CloseHandle(self.mapping_handle) };
+            let success = unsafe { winapi::um::handleapi::CloseHandle(self.mapping_handle) };
             assert!(success != 0);
         }
     }
@@ -54,12 +53,12 @@ pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> 
     // Memory-mapping a file on Windows is a two-step process: first we create a file mapping
     // object, and then we create a view of that mapping in the virtual address space.
     platform_data.mapping_handle = unsafe {
-        kernel32::CreateFileMappingW(
+        winapi::um::memoryapi::CreateFileMappingW(
             file_handle,
-            ptr::null_mut(),              // Use default security policy.
-            winapi::winnt::PAGE_READONLY, // The memory will be read-only.
-            0, 0,                         // The mapping size is the size of the file.
-            ptr::null_mut()               // The mapping does not have a name.
+            ptr::null_mut(),                  // Use default security policy.
+            winapi::um::winnt::PAGE_READONLY, // The memory will be read-only.
+            0, 0,                             // The mapping size is the size of the file.
+            ptr::null_mut()                   // The mapping does not have a name.
         )
     };
 
@@ -68,11 +67,11 @@ pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> 
     }
 
     let result = unsafe {
-        kernel32::MapViewOfFile(
+        winapi::um::memoryapi::MapViewOfFile(
             platform_data.mapping_handle,
-            winapi::memoryapi::FILE_MAP_READ, // The memory mapping will be read-only.
-            0, 0,                             // Start offset of the mapping is 0.
-            length as winapi::basetsd::SIZE_T // Map the entire file.
+            winapi::um::memoryapi::FILE_MAP_READ,     // The memory mapping will be read-only.
+            0, 0,                                     // Start offset of the mapping is 0.
+            length as winapi::shared::basetsd::SIZE_T // Map the entire file.
         )
     };
 
@@ -84,7 +83,9 @@ pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> 
 }
 
 pub fn unmap_file(buffer: *const u8, _length: usize) {
-    let success = unsafe { kernel32::UnmapViewOfFile(buffer as *mut os::raw::c_void) };
+    let success = unsafe {
+        winapi::um::memoryapi::UnmapViewOfFile(buffer as *mut os::raw::c_void)
+    };
     assert!(success != 0);
 }
 
@@ -103,14 +104,14 @@ pub fn get_resident(_buffer: *const u8, _length: usize, residency: &mut [bool]) 
 
 /// See also `unix::prefetch`.
 pub fn prefetch(buffer: *const u8, length: usize) {
-    let mut entry = winapi::memoryapi::WIN32_MEMORY_RANGE_ENTRY {
+    let mut entry = winapi::um::memoryapi::WIN32_MEMORY_RANGE_ENTRY {
         VirtualAddress: buffer as *mut os::raw::c_void,
-        NumberOfBytes: length as winapi::basetsd::SIZE_T,
+        NumberOfBytes: length as winapi::shared::basetsd::SIZE_T,
     };
 
     unsafe {
-        let current_process_handle = kernel32::GetCurrentProcess();
-        kernel32::PrefetchVirtualMemory(
+        let current_process_handle = winapi::um::processthreadsapi::GetCurrentProcess();
+        winapi::um::memoryapi::PrefetchVirtualMemory(
             current_process_handle, // Prefetch for the current process.
             1, &mut entry,          // An array of length 1 that contains `entry`.
             0                       // Reserved flag that must be 0.
@@ -125,7 +126,7 @@ pub fn prefetch(buffer: *const u8, length: usize) {
 pub fn get_page_size() -> usize {
     // Fill the `SYSTEM_INFO` struct with zeroes. It will be filled by
     // `GetSystemInfo` later but Rust requires it to be initialized.
-    let mut sysinfo = winapi::sysinfoapi::SYSTEM_INFO {
+    let mut sysinfo = winapi::um::sysinfoapi::SYSTEM_INFO {
         wProcessorArchitecture: 0,
         wReserved: 0,
         dwPageSize: 0,
@@ -138,6 +139,6 @@ pub fn get_page_size() -> usize {
         wProcessorLevel: 0,
         wProcessorRevision: 0
     };
-    unsafe { kernel32::GetSystemInfo(&mut sysinfo); }
+    unsafe { winapi::um::sysinfoapi::GetSystemInfo(&mut sysinfo); }
     sysinfo.dwPageSize as usize
 }
