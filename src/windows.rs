@@ -9,6 +9,7 @@
 
 use std::fs;
 use std::io;
+use std::mem;
 use std::os;
 use std::os::windows::io::AsRawHandle;
 use std::ptr;
@@ -54,7 +55,7 @@ pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> 
     // object, and then we create a view of that mapping in the virtual address space.
     platform_data.mapping_handle = unsafe {
         winapi::um::memoryapi::CreateFileMappingW(
-            file_handle,
+            file_handle as *mut winapi::ctypes::c_void,
             ptr::null_mut(),                  // Use default security policy.
             winapi::um::winnt::PAGE_READONLY, // The memory will be read-only.
             0, 0,                             // The mapping size is the size of the file.
@@ -84,7 +85,7 @@ pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> 
 
 pub fn unmap_file(buffer: *const u8, _length: usize) {
     let success = unsafe {
-        winapi::um::memoryapi::UnmapViewOfFile(buffer as *mut os::raw::c_void)
+        winapi::um::memoryapi::UnmapViewOfFile(buffer as *mut winapi::ctypes::c_void)
     };
     assert!(success != 0);
 }
@@ -105,7 +106,7 @@ pub fn get_resident(_buffer: *const u8, _length: usize, residency: &mut [bool]) 
 /// See also `unix::prefetch`.
 pub fn prefetch(buffer: *const u8, length: usize) {
     let mut entry = winapi::um::memoryapi::WIN32_MEMORY_RANGE_ENTRY {
-        VirtualAddress: buffer as *mut os::raw::c_void,
+        VirtualAddress: buffer as *mut winapi::ctypes::c_void,
         NumberOfBytes: length as winapi::shared::basetsd::SIZE_T,
     };
 
@@ -126,19 +127,7 @@ pub fn prefetch(buffer: *const u8, length: usize) {
 pub fn get_page_size() -> usize {
     // Fill the `SYSTEM_INFO` struct with zeroes. It will be filled by
     // `GetSystemInfo` later but Rust requires it to be initialized.
-    let mut sysinfo = winapi::um::sysinfoapi::SYSTEM_INFO {
-        wProcessorArchitecture: 0,
-        wReserved: 0,
-        dwPageSize: 0,
-        lpMinimumApplicationAddress: ptr::null_mut(),
-        lpMaximumApplicationAddress: ptr::null_mut(),
-        dwActiveProcessorMask: 0,
-        dwNumberOfProcessors: 0,
-        dwProcessorType: 0,
-        dwAllocationGranularity: 0,
-        wProcessorLevel: 0,
-        wProcessorRevision: 0
-    };
+    let mut sysinfo: winapi::um::sysinfoapi::SYSTEM_INFO = unsafe { mem::zeroed() };
     unsafe { winapi::um::sysinfoapi::GetSystemInfo(&mut sysinfo); }
     sysinfo.dwPageSize as usize
 }
