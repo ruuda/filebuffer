@@ -5,6 +5,7 @@ Fast and simple file reading for Rust.
 [![Build Status][tr-img]][tr]
 [![Build Status][av-img]][av]
 [![Crates.io version][crate-img]][crate]
+[![Changelog][changelog-img]][changelog]
 [![Documentation][docs-img]][docs]
 
 Filebuffer can map files into memory. This is often faster than using the
@@ -46,13 +47,15 @@ non-commercial use under the conditions given in the license. If you want to use
 Filebuffer in your GPLv2-licensed software, you can add an [exception][except]
 to your copyright notice.
 
-[tr-img]:    https://travis-ci.org/ruuda/filebuffer.svg?branch=master
-[tr]:        https://travis-ci.org/ruuda/filebuffer
-[av-img]:    https://ci.appveyor.com/api/projects/status/kfacq5ul22hbnd9u?svg=true
-[av]:        https://ci.appveyor.com/project/ruuda/filebuffer
-[crate-img]: https://img.shields.io/crates/v/filebuffer.svg
-[crate]:     https://crates.io/crates/filebuffer
-[docs-img]:  https://img.shields.io/badge/docs-online-blue.svg
-[docs]:      https://docs.rs/filebuffer
-[apache2]:   https://www.apache.org/licenses/LICENSE-2.0
-[except]:    https://www.gnu.org/licenses/gpl-faq.html#GPLIncompatibleLibs
+[tr-img]:        https://travis-ci.org/ruuda/filebuffer.svg?branch=master
+[tr]:            https://travis-ci.org/ruuda/filebuffer
+[av-img]:        https://ci.appveyor.com/api/projects/status/kfacq5ul22hbnd9u?svg=true
+[av]:            https://ci.appveyor.com/project/ruuda/filebuffer
+[crate-img]:     https://img.shields.io/crates/v/filebuffer.svg
+[crate]:         https://crates.io/crates/filebuffer
+[changelog-img]: https://img.shields.io/badge/changelog-online-blue.svg
+[changelog]:     https://github.com/ruuda/filebuffer/blob/master/changelog.md#changelog
+[docs-img]:      https://img.shields.io/badge/docs-online-blue.svg
+[docs]:          https://docs.rs/filebuffer
+[apache2]:       https://www.apache.org/licenses/LICENSE-2.0
+[except]:        https://www.gnu.org/licenses/gpl-faq.html#GPLIncompatibleLibs
