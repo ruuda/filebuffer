@@ -23,7 +23,7 @@
 use std::cmp;
 use std::io;
 use std::fs;
-use std::ops::Deref;
+use std::ops::{Bound, Deref, RangeBounds};
 use std::path::Path;
 use std::ptr;
 use std::slice;
@@ -210,8 +210,18 @@ impl FileBuffer {
     /// # Panics
     ///
     /// Panics if the specified range lies outside of the buffer.
-    pub fn prefetch(&self, offset: usize, length: usize) {
-        // TODO: This function should use `collections::range::RangeArgument` once stabilized.
+    pub fn prefetch<R>(&self, range: R) where R: RangeBounds<usize> {
+        let offset = match range.start_bound() {
+            Bound::Unbounded => 0,
+            Bound::Included(z) => *z,
+            Bound::Excluded(z) => z.saturating_add(1),
+        };
+        let length = match range.end_bound() {
+            Bound::Unbounded => self.length,
+            Bound::Included(z) => z.saturating_sub(1),
+            Bound::Excluded(z) => *z,
+        };
+
         // The specified offset and length must lie within the buffer.
         assert!(offset + length <= self.length);
 
