@@ -26,8 +26,9 @@ matrix:
     - os: osx
       rust: stable
 
-    - os: osx
-      rust: beta
+    # TODO: Restore when https://github.com/rust-lang/rust/issues/55817 is fixed.
+    # - os: osx
+    #   rust: beta
 
     - os: osx
       rust: nightly
