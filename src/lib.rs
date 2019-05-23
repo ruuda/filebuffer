@@ -34,17 +34,11 @@ mod unix;
 #[cfg(windows)]
 mod windows;
 
-#[cfg(target_os = "macos")]
-mod macos;
-
 #[cfg(unix)]
 use unix::{PlatformData, get_page_size, map_file, unmap_file, prefetch};
 
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix))]
 use unix::get_resident;
-
-#[cfg(target_os = "macos")]
-use macos::get_resident;
 
 #[cfg(windows)]
 use windows::{PlatformData, get_resident, get_page_size, map_file, unmap_file, prefetch};

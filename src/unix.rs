@@ -10,6 +10,7 @@
 
 use std::fs;
 use std::io;
+use std::mem;
 use std::os::unix::io::AsRawFd;
 use std::ptr;
 
@@ -52,16 +53,15 @@ pub fn unmap_file(buffer: *const u8, length: usize) {
 /// Writes whether the pages in the range starting at `buffer` with a length of `length` bytes
 /// are resident in physical memory into `residency`. The size of `residency` must be at least
 /// `length / page_size`. Both `buffer` and `length` must be a multiple of the page size.
-#[cfg(not(target_os = "macos"))]
 pub fn get_resident(buffer: *const u8, length: usize, residency: &mut [bool]) {
     use std::thread;
 
     let result = unsafe {
-        // Note: the libc on Mac OS uses a signed char instead of an unsigned
-        // one, which is why this function is disabled on Mac OS. There is a
-        // replacement in macos.rs.
-        let residency_uchar = residency.as_mut_ptr() as *mut libc::c_uchar;
-        libc::mincore(buffer as *mut libc::c_void, length, residency_uchar)
+        // Note: the libc on BSD descendants uses a signed char for residency_char while
+        // glibc uses an unsigned one, which is why we use an type-inferred cast here.
+        let residency_char = residency.as_mut_ptr() as *mut _;
+        assert_eq!(1, mem::size_of_val(&*residency_char));
+        libc::mincore(buffer as *mut libc::c_void, length, residency_char)
     };
 
     // Any error code except EAGAIN indicates a programming error.
