@@ -15,7 +15,7 @@ travis-ci = { repository = "ruuda/filebuffer", branch = "v0.4.0" }
 appveyor = { repository = "ruuda/filebuffer", branch = "v0.4.0" }
 
 [target.'cfg(unix)'.dependencies]
-libc = "0.2.6"
+libc = "0.2.86"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["handleapi", "memoryapi", "processthreadsapi", "sysinfoapi", "winnt"] }

@@ -21,8 +21,8 @@
 #![warn(missing_docs)]
 
 use std::cmp;
-use std::io;
 use std::fs;
+use std::io;
 use std::ops::Deref;
 use std::path::Path;
 use std::ptr;
@@ -35,13 +35,13 @@ mod unix;
 mod windows;
 
 #[cfg(unix)]
-use unix::{PlatformData, get_page_size, map_file, unmap_file, prefetch};
+use unix::{get_page_size, map_file, prefetch, unmap_file, PlatformData};
 
 #[cfg(all(unix))]
 use unix::get_resident;
 
 #[cfg(windows)]
-use windows::{PlatformData, get_resident, get_page_size, map_file, unmap_file, prefetch};
+use windows::{get_page_size, get_resident, map_file, prefetch, unmap_file, PlatformData};
 
 /// A memory-mapped file.
 ///
@@ -105,13 +105,13 @@ impl FileBuffer {
         // required to ensure that a different process does not suddenly modify
         // the contents of the file. See also Rust issue 27720.
 
-        let file = try!(open_opts.open(path));
-        let (buffer, length, platform_data) = try!(map_file(file));
+        let file = open_opts.open(path)?;
+        let (buffer, length, platform_data) = map_file(file)?;
         let fbuffer = FileBuffer {
             page_size: get_page_size(),
             buffer: buffer,
             length: length,
-            platform_data: platform_data
+            platform_data: platform_data,
         };
         Ok(fbuffer)
     }
@@ -138,7 +138,9 @@ impl FileBuffer {
         assert!(offset + length <= self.length);
 
         // This is a no-op for empty files.
-        if self.buffer == ptr::null() { return 0; }
+        if self.buffer == ptr::null() {
+            return 0;
+        }
 
         let aligned_offset = round_down_to(offset, self.page_size);
         let aligned_length = round_up_to(length + (offset - aligned_offset), self.page_size);
@@ -162,7 +164,10 @@ impl FileBuffer {
             get_resident(check_buffer, check_length, &mut residency);
 
             // Count the number of resident pages.
-            match residency[..pages_to_check].iter().position(|resident| !resident) {
+            match residency[..pages_to_check]
+                .iter()
+                .position(|resident| !resident)
+            {
                 Some(non_resident) => {
                     // The index of the non-resident page is the number of resident pages.
                     pages_resident += non_resident;
@@ -210,7 +215,9 @@ impl FileBuffer {
         assert!(offset + length <= self.length);
 
         // This is a no-op for empty files.
-        if self.buffer == ptr::null() { return; }
+        if self.buffer == ptr::null() {
+            return;
+        }
 
         let aligned_offset = round_down_to(offset, self.page_size);
         let aligned_length = round_up_to(length + (offset - aligned_offset), self.page_size);
@@ -249,7 +256,9 @@ unsafe impl Send for FileBuffer {}
 
 impl Drop for FileBuffer {
     fn drop(&mut self) {
-        if self.buffer != ptr::null() { unmap_file(self.buffer, self.length); }
+        if self.buffer != ptr::null() {
+            unmap_file(self.buffer, self.length);
+        }
     }
 }
 

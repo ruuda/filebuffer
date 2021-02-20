@@ -21,10 +21,13 @@ pub struct PlatformData;
 
 pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> {
     let fd = file.as_raw_fd();
-    let length = try!(file.metadata()).len();
+    let length = (file.metadata()?).len();
 
     if length > usize::max_value() as u64 {
-        return Err(io::Error::new(io::ErrorKind::Other, "file is larger than address space"));
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            "file is larger than address space",
+        ));
     }
 
     // Don't try to map anything if the file is empty.
@@ -33,7 +36,14 @@ pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> 
     }
 
     let result = unsafe {
-        libc::mmap(ptr::null_mut(), length as usize, libc::PROT_READ, libc::MAP_PRIVATE, fd, 0)
+        libc::mmap(
+            ptr::null_mut(),
+            length as usize,
+            libc::PROT_READ,
+            libc::MAP_PRIVATE,
+            fd,
+            0,
+        )
     };
 
     if result == libc::MAP_FAILED {
@@ -78,9 +88,7 @@ pub fn get_resident(buffer: *const u8, length: usize, residency: &mut [bool]) {
 /// Requests the kernel to make the specified range of bytes resident in physical memory. `buffer`
 /// must be page-aligned.
 pub fn prefetch(buffer: *const u8, length: usize) {
-    let result = unsafe {
-        libc::madvise(buffer as *mut libc::c_void, length, libc::MADV_WILLNEED)
-    };
+    let result = unsafe { libc::madvise(buffer as *mut libc::c_void, length, libc::MADV_WILLNEED) };
 
     // Any returned error code indicates a programming error, not a runtime error.
     assert_eq!(0, result);
