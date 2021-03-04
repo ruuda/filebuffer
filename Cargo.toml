@@ -15,22 +15,10 @@ travis-ci = { repository = "ruuda/filebuffer", branch = "v0.4.0" }
 appveyor = { repository = "ruuda/filebuffer", branch = "v0.4.0" }
 
 [target.'cfg(unix)'.dependencies]
-libc = "0.2.6"
+libc = "0.2.86"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["handleapi", "memoryapi", "processthreadsapi", "sysinfoapi", "winnt"] }
 
 [dev-dependencies]
-rust-crypto = "0.2.34"
-
-# Version 0.3.36 of the gcc crate (a dependency of rust-crypto) breaks backwards
-# compatibility with Rust 1.4 through 1.6, so force a less recent version. This
-# is only for building the application, so dependencies of Filebuffer are not
-# affected by this override.
-gcc = "= 0.3.35"
-
-# Version 0.1.36 of the time crate (a dependency of rust-crypto) breaks
-# backwards compatibility with Rust 1.4 through 1.7, so force a less recent
-# version. This is only for building the application, so dependencies of
-# Filebuffer are not affected by this override.
-time = "= 0.1.35"
+rust-crypto = "0.2.36"

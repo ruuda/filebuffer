@@ -3,19 +3,16 @@ language: rust
 matrix:
   include:
     - os: linux
-      rust: 1.8.0
+      # Oldest supported version.
+      rust: 1.25.0
 
     - os: linux
-      rust: 1.10.0
+      # Oldest version shipped by Debian at the time of writing.
+      rust: 1.34.2
 
     - os: linux
-      rust: 1.14.0
-
-    - os: linux
-      rust: 1.18.0
-
-    - os: linux
-      rust: 1.22.0
+      # Latest version at the time of writing.
+      rust: 1.50.0
 
     - os: linux
       rust: beta
@@ -26,9 +23,8 @@ matrix:
     - os: osx
       rust: stable
 
-    # TODO: Restore when https://github.com/rust-lang/rust/issues/55817 is fixed.
-    # - os: osx
-    #   rust: beta
+    - os: osx
+      rust: beta
 
     - os: osx
       rust: nightly
