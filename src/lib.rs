@@ -230,7 +230,11 @@ impl FileBuffer {
     /// method can avoid some lifetime issues. Still, it is good practice to close the file buffer
     /// if possible. This method should be a last resort.
     pub fn leak(mut self) -> &'static [u8] {
-        let buffer = unsafe { slice::from_raw_parts(self.buffer, self.length) };
+        let buffer = if self.buffer == ptr::null() {
+            &[]
+        } else {
+            unsafe { slice::from_raw_parts(self.buffer, self.length) }
+        };
 
         // Prevent `drop()` from freeing the buffer.
         self.buffer = ptr::null();
@@ -257,7 +261,11 @@ impl Deref for FileBuffer {
     type Target = [u8];
 
     fn deref(&self) -> &[u8] {
-        unsafe { slice::from_raw_parts(self.buffer, self.length) }
+        if self.buffer == ptr::null() {
+            &[]
+        } else {
+            unsafe { slice::from_raw_parts(self.buffer, self.length) }
+        }
     }
 }
 
