@@ -1,6 +1,17 @@
 Changelog
 =========
 
+1.0.0
+-----
+
+Released 2024-05-18.
+
+ * **Compatibility:** The minimum supported Rust version is now 1.40, up from
+   1.25 previously.
+ * Ensure compatibility with Rust 1.78 (which introduced a panic in
+   `slice::from_raw_parts` that affects mapping an empty file).
+ * Use Rust 2018 edition, upgrade usage of `try!` to the `?` operator.
+
 0.4.0
 -----
 
