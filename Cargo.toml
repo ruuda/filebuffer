@@ -9,6 +9,7 @@ categories = ["asynchronous", "filesystem", "memory-management"]
 description = "Fast and simple file reading"
 repository = "https://github.com/ruuda/filebuffer"
 documentation = "https://docs.rs/filebuffer"
+edition = "2018"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2.86"
