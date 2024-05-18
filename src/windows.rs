@@ -34,7 +34,7 @@ impl Drop for PlatformData {
 
 pub fn map_file(file: fs::File) -> io::Result<(*const u8, usize, PlatformData)> {
     let file_handle = file.as_raw_handle();
-    let length = try!(file.metadata()).len();
+    let length = file.metadata()?.len();
 
     if length > usize::max_value() as u64 {
         return Err(io::Error::new(io::ErrorKind::Other, "file is larger than address space"));

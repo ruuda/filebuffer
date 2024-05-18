@@ -105,8 +105,8 @@ impl FileBuffer {
         // required to ensure that a different process does not suddenly modify
         // the contents of the file. See also Rust issue 27720.
 
-        let file = try!(open_opts.open(path));
-        let (buffer, length, platform_data) = try!(map_file(file));
+        let file = open_opts.open(path)?;
+        let (buffer, length, platform_data) = map_file(file)?;
         let fbuffer = FileBuffer {
             page_size: get_page_size(),
             buffer: buffer,
