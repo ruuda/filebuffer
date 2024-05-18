@@ -10,10 +10,6 @@ description = "Fast and simple file reading"
 repository = "https://github.com/ruuda/filebuffer"
 documentation = "https://docs.rs/filebuffer"
 
-[badges]
-travis-ci = { repository = "ruuda/filebuffer", branch = "v0.4.0" }
-appveyor = { repository = "ruuda/filebuffer", branch = "v0.4.0" }
-
 [target.'cfg(unix)'.dependencies]
 libc = "0.2.86"
 
