@@ -9,20 +9,20 @@
 // with `sha256sum_naive` which uses the IO primitives in the standard library.
 
 use std::env;
-use crypto::digest::Digest;
-use crypto::sha2::Sha256;
 use filebuffer::FileBuffer;
+use sha2::{Sha256, Digest};
 
-extern crate crypto;
 extern crate filebuffer;
 
 fn main() {
     for fname in env::args().skip(1) {
         let fbuffer = FileBuffer::open(&fname).expect("failed to open file");
         let mut hasher = Sha256::new();
-        hasher.input(&fbuffer);
+        hasher.update(&fbuffer);
+        let result = hasher.finalize();
+        let result = hex::encode(result.as_slice());
 
         // Match the output format of `sha256sum`, which has two spaces between the hash and name.
-        println!("{}  {}", hasher.result_str(), fname);
+        println!("{}  {}", result, fname);
     }
 }

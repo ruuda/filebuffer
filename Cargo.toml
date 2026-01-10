@@ -18,4 +18,5 @@ libc = "0.2.86"
 winapi = { version = "0.3", features = ["handleapi", "memoryapi", "processthreadsapi", "sysinfoapi", "winnt"] }
 
 [dev-dependencies]
-rust-crypto = "0.2.36"
+sha2 = "0.10"
+hex = "0.4"

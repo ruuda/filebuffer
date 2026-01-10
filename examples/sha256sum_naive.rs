@@ -12,10 +12,8 @@ use std::env;
 use std::fs;
 use std::io;
 use std::io::BufRead;
-use crypto::digest::Digest;
-use crypto::sha2::Sha256;
+use sha2::{Sha256, Digest};
 
-extern crate crypto;
 
 fn main() {
     for fname in env::args().skip(1) {
@@ -30,13 +28,15 @@ fn main() {
                     // End of file.
                     break;
                 }
-                hasher.input(buffer);
+                hasher.update(buffer);
                 buffer.len()
             };
             reader.consume(consumed_len);
         }
+        let result = hasher.finalize();
+        let result = hex::encode(result.as_slice());
 
         // Match the output format of `sha256sum`, which has two spaces between the hash and name.
-        println!("{}  {}", hasher.result_str(), fname);
+        println!("{}  {}", result, fname);
     }
 }
