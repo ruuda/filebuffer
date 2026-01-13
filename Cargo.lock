@@ -41,7 +41,7 @@ dependencies = [
 
 [[package]]
 name = "filebuffer"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "hex 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.163 (registry+https://github.com/rust-lang/crates.io-index)",

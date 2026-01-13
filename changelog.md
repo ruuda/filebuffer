@@ -1,6 +1,18 @@
 Changelog
 =========
 
+1.0.1
+-----
+
+Released 2026-01-13.
+
+ * Replace the `rust-crypto` dev-dependency used by the example with `sha2` and
+   `hex`. As this only affects the example, this change does not impact users
+   of this crate, and there is no need to update.
+ * Compatible with Rust 1.40 through 1.93.
+
+Thanks to Alexander Kjäll for contributing to this release.
+
 1.0.0
 -----
 
